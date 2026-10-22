@@ -20,8 +20,9 @@ export const SPECIES: Species[] = curatedSpecies.map((c) => {
   return {
     ...c,
     ...e,
-    status: e.status ?? c.status,
-    statusSource: e.statusSource ?? 'curated',
+    // Le statut officiel (UICN via iNaturalist) prime ; sinon on garde celui de la fiche rédigée.
+    status: e.statusSource === 'iucn' && e.status ? e.status : c.status,
+    statusSource: e.statusSource === 'iucn' ? 'iucn' : 'curated',
     photos: e.photos ?? [],
     taxonomy: e.taxonomy ?? [],
   };

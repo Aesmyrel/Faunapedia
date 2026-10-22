@@ -3,6 +3,7 @@
  * de quiz, série quotidienne, révision et réglages. Sauvegardé localement.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useSyncExternalStore } from 'react';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
@@ -16,6 +17,8 @@ export interface Settings {
   haptics: boolean;
   sounds: boolean;
   theme: ThemePreference;
+  /** L’écran de bienvenue a-t-il déjà été vu ? */
+  onboarded: boolean;
 }
 
 export interface QuizStats {
@@ -113,7 +116,7 @@ const INITIAL: PersistedState = {
   review: {},
   badges: {},
   counters: { taxa: 0, compares: 0, nearby: 0, night: 0 },
-  settings: { haptics: true, sounds: true, theme: 'system' },
+  settings: { haptics: true, sounds: true, theme: 'system', onboarded: false },
 };
 
 /** XP gagnée pour chaque nouvelle espèce découverte. */
@@ -243,6 +246,11 @@ export const useStore = create<AppState>()(
     {
       name: 'faunapedia-v1',
       version: 1,
+      // Complète les réglages ajoutés depuis une version antérieure de la sauvegarde.
+      merge: (persisted, current) => {
+        const p = (persisted ?? {}) as Partial<PersistedState>;
+        return { ...current, ...p, settings: { ...current.settings, ...p.settings } };
+      },
       storage: createJSONStorage(() => AsyncStorage),
       partialize: (s): PersistedState => ({
         seen: s.seen,
@@ -258,6 +266,15 @@ export const useStore = create<AppState>()(
     },
   ),
 );
+
+/** Vrai une fois la sauvegarde locale relue (évite d’afficher l’état par défaut). */
+export function useHydrated(): boolean {
+  return useSyncExternalStore(
+    (cb) => useStore.persist.onFinishHydration(cb),
+    () => useStore.persist.hasHydrated(),
+    () => false,
+  );
+}
 
 /** La série quotidienne est-elle toujours active (jouée hier ou aujourd’hui) ? */
 export function activeStreak(daily: DailyState, today = todayKey()): number {

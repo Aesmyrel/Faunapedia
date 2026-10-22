@@ -436,7 +436,8 @@ async function main() {
       taxonomy,
       silhouette,
       observations: t?.observations_count,
-      status: iucn ?? s.status,
+      // Seul le statut officiel est stocké : le statut rédigé reste dans la fiche.
+      status: iucn,
       statusSource: iucn ? 'iucn' : 'curated',
     };
     if (iucn && iucn !== s.status) console.log(`  ℹ statut ${s.id} : ${s.status} → ${iucn} (UICN)`);

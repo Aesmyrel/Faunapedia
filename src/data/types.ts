@@ -122,6 +122,8 @@ export interface CuratedSpecies {
   group: GroupId;
   /** Statut UICN de secours (remplacé par la source officielle si disponible). */
   status: IucnStatus;
+  /** Précision sur le statut (évaluation régionale, sous-espèce, complexe d’espèces…). */
+  statusNote?: string;
   stats: Stats;
   diet: Diet[];
   activity: Activity;

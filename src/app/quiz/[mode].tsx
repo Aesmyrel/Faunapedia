@@ -58,7 +58,9 @@ export default function QuizSessionScreen() {
   const review = useStore((s) => s.review);
   const best = useStore((s) => s.stats.bestCorrect[mode]);
   const finishQuiz = useStore((s) => s.finishQuiz);
+  // Défi du jour déjà relevé : la partie devient un entraînement (figé au lancement).
   const practice = mode === 'daily' && daily.last === today;
+  const [practiceRun, setPracticeRun] = useState(false);
 
   const [difficulty, setDifficulty] = useState<Difficulty>(() => {
     const d = Number(params.difficulty);
@@ -98,7 +100,7 @@ export default function QuizSessionScreen() {
       finished.current = true;
       const correct = list.filter((p) => p.correct).length;
       const r = finishQuiz({
-        mode: practice ? 'quick' : mode,
+        mode: practiceRun ? 'quick' : mode,
         correct,
         total: list.length,
         points: total,
@@ -108,7 +110,7 @@ export default function QuizSessionScreen() {
       setReward(r);
       setPhase('results');
     },
-    [finishQuiz, mode, practice],
+    [finishQuiz, mode, practiceRun],
   );
 
   const load = (source: Quiz | null, i: number, streak: number) => {
@@ -137,6 +139,7 @@ export default function QuizSessionScreen() {
 
   const start = () => {
     reset();
+    setPracticeRun(practice);
     const q = createQuiz(SPECIES, {
       mode,
       seed: mode === 'daily' ? hashString(`defi-${today}`) : randomSeed(),
@@ -226,7 +229,9 @@ export default function QuizSessionScreen() {
             <Segments total={info.length} played={played} current={index} />
           ) : info.timeLimitSec ? (
             <View style={styles.timer}>
-              <ProgressBar progress={timeLeft / info.timeLimitSec} color={timeLeft < 10 ? colors.danger : info.color} height={8} />
+              <View style={styles.flex}>
+                <ProgressBar progress={timeLeft / info.timeLimitSec} color={timeLeft < 10 ? colors.danger : info.color} height={8} />
+              </View>
               <Txt variant="smallStrong" style={styles.timerText} color={timeLeft < 10 ? colors.danger : colors.text}>
                 {Math.ceil(timeLeft)} s
               </Txt>
@@ -365,7 +370,7 @@ export default function QuizSessionScreen() {
             played={played}
             points={points}
             reward={reward}
-            practice={practice}
+            practice={practiceRun}
             onReplay={() => {
               reset();
               setQuestion(null);

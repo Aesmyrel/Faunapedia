@@ -147,9 +147,11 @@ export default function SpeciesScreen() {
             <Txt variant="caption" tone="muted">
               {s.statusSource === 'iucn'
                 ? 'Statut mondial officiel de l’UICN (via iNaturalist).'
-                : s.status === 'NE'
-                  ? 'Cette espèce n’a pas encore été évaluée à l’échelle mondiale.'
-                  : 'Statut renseigné par Faunapedia d’après la Liste rouge de l’UICN.'}
+                : s.statusNote
+                  ? s.statusNote
+                  : s.status === 'NE'
+                    ? 'Cette espèce n’a pas encore été évaluée à l’échelle mondiale.'
+                    : 'Statut renseigné par Faunapedia d’après la Liste rouge de l’UICN.'}
             </Txt>
           </View>
         </Section>

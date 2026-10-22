@@ -673,6 +673,7 @@ const entries: Entry[] = [
     sci: 'Camelus dromedarius',
     name: 'Dromadaire',
     status: 'NE',
+    statusNote: 'Espèce domestique, non évaluée par l’UICN : sa forme sauvage a disparu.',
     stats: { length: [220, 340], height: [180, 200], weight: [300, 690], lifespan: [30, 40], speed: 65 },
     diet: ['herbivore'],
     activity: 'diurne',

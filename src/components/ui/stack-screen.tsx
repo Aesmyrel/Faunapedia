@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, type ScrollViewProps, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Gutter, MaxContentWidth } from '@/constants/theme';
+import { MaxContentWidth } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 import { mci } from './icon';
@@ -56,6 +56,4 @@ const styles = StyleSheet.create({
   inner: { width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   bar: { position: 'absolute', left: 14, right: 14, flexDirection: 'row', justifyContent: 'space-between' },
   actions: { flexDirection: 'row', gap: 10 },
-  // Utilisé par les écrans pour aligner leur contenu sur la marge standard.
-  gutter: { paddingHorizontal: Gutter },
 });

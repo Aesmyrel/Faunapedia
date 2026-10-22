@@ -14,18 +14,21 @@ import { Txt } from '../ui/text';
 
 const TILES = [0, 1] as const;
 
-/** Carte mondiale des observations (GBIF), en hexagones de densité. */
-export function DistributionMap({ taxonKey, name }: { taxonKey: number; name: string }) {
+/**
+ * Carte mondiale des observations (GBIF), en hexagones de densité.
+ * `historical` : espèce éteinte, on garde alors toutes les sources (spécimens compris).
+ */
+export function DistributionMap({ taxonKey, name, historical = false }: { taxonKey: number; name: string; historical?: boolean }) {
   const { dark, colors } = useTheme();
   const style = dark ? 'dark' : 'light';
-  const count = useRemote(`gbif-count-${taxonKey}`, () => gbifOccurrenceCount(taxonKey));
+  const count = useRemote(`gbif-count-${taxonKey}-${historical}`, () => gbifOccurrenceCount(taxonKey, !historical));
   return (
     <View style={[styles.wrap, { borderColor: colors.border, backgroundColor: colors.surface }]}>
       <View style={styles.map} accessible accessibilityLabel={`Carte des observations de ${name}`}>
         {TILES.map((x) => (
           <View key={x} style={styles.tile}>
             <Image source={{ uri: gbifBaseTile(x, style) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} />
-            <Image source={{ uri: gbifDensityTile(taxonKey, x, style) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />
+            <Image source={{ uri: gbifDensityTile(taxonKey, x, style, !historical) }} style={StyleSheet.absoluteFill} contentFit="cover" transition={300} />
           </View>
         ))}
       </View>
@@ -33,7 +36,7 @@ export function DistributionMap({ taxonKey, name }: { taxonKey: number; name: st
         <Icon icon={mci('map-marker-multiple')} size={16} color={colors.accent} />
         <Txt variant="caption" tone="secondary" style={styles.flex}>
           {count.data !== undefined
-            ? `${formatNumber(count.data, 0)} observations géolocalisées dans le monde`
+            ? `${formatNumber(count.data, 0)} ${historical ? 'données géolocalisées (spécimens compris)' : 'observations de terrain géolocalisées'}`
             : 'Observations géolocalisées (GBIF)'}
         </Txt>
         <Txt variant="caption" tone="accent">

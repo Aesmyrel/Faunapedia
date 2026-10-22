@@ -196,7 +196,7 @@ export default function SpeciesScreen() {
 
         {s.gbifKey && (
           <Section title="Répartition" eyebrow="Observations mondiales">
-            <DistributionMap taxonKey={s.gbifKey} name={s.name} />
+            <DistributionMap taxonKey={s.gbifKey} name={s.name} historical={s.status === 'EX'} />
           </Section>
         )}
 

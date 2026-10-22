@@ -249,17 +249,25 @@ export function gbifBaseTile(x: 0 | 1, style: MapStyle): string {
   return `https://tile.gbif.org/4326/omt/0/${x}/0@2x.png?style=gbif-${style === 'dark' ? 'dark' : 'light'}`;
 }
 
-/** Tuiles de densité d’observations pour un taxon GBIF. */
-export function gbifDensityTile(taxonKey: number, x: 0 | 1, style: MapStyle): string {
+/**
+ * Tuiles de densité d’observations pour un taxon GBIF. Par défaut, seules les
+ * observations de terrain sont retenues : les spécimens de musée et les
+ * animaux de zoo dessineraient sinon des aires de répartition fantaisistes.
+ */
+export function gbifDensityTile(taxonKey: number, x: 0 | 1, style: MapStyle, fieldOnly = true): string {
   const palette = style === 'dark' ? 'orangeHeat' : 'purpleYellow';
   return (
     `https://api.gbif.org/v2/map/occurrence/density/0/${x}/0@2x.png?srs=EPSG:4326` +
-    `&taxonKey=${taxonKey}&bin=hex&hexPerTile=48&style=${palette}.poly`
+    `&taxonKey=${taxonKey}&bin=hex&hexPerTile=34&style=${palette}.poly` +
+    (fieldOnly ? '&basisOfRecord=HUMAN_OBSERVATION' : '')
   );
 }
 
-export async function gbifOccurrenceCount(taxonKey: number): Promise<number> {
-  const res = await fetchJson<{ count: number }>(`https://api.gbif.org/v1/occurrence/search?taxonKey=${taxonKey}&limit=0`);
+export async function gbifOccurrenceCount(taxonKey: number, fieldOnly = true): Promise<number> {
+  const filter = fieldOnly ? '&basisOfRecord=HUMAN_OBSERVATION' : '';
+  const res = await fetchJson<{ count: number }>(
+    `https://api.gbif.org/v1/occurrence/search?taxonKey=${taxonKey}&hasCoordinate=true${filter}&limit=0`,
+  );
   return res.count;
 }
 

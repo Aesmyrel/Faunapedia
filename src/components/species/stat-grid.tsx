@@ -35,7 +35,9 @@ export function StatGrid({ stats }: { stats: Stats }) {
   return (
     <View style={styles.grid}>
       {items.map((it) => (
-        <View key={it.label} style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View
+          key={it.label}
+          style={[styles.tile, { flexBasis: items.length === 4 ? '46%' : '30%', backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={[styles.icon, { backgroundColor: alpha(it.color, 0.16) }]}>
             <Icon icon={it.icon} size={18} color={it.color} />
           </View>
@@ -53,6 +55,6 @@ export function StatGrid({ stats }: { stats: Stats }) {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  tile: { flexGrow: 1, flexBasis: '30%', minWidth: 100, padding: 12, gap: 6, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth },
+  tile: { flexGrow: 1, minWidth: 100, padding: 12, gap: 6, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth },
   icon: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
 });

@@ -400,6 +400,7 @@ export default function QuizSessionScreen() {
     return 'dimmed';
   };
   const learn = getSpecies(question.learnIds[0]);
+  const answerLabel = question.choices.find((c) => c.id === question.answerId)?.label;
   const feedbackTitle = correctNow ? PRAISE[index % PRAISE.length] : OOPS[index % OOPS.length];
 
   return (
@@ -449,16 +450,14 @@ export default function QuizSessionScreen() {
             </View>
           ) : question.layout === 'duel' ? (
             <View style={styles.duel}>
-              {question.choices.map((c, i) => (
+              {question.choices.map((c) => (
                 <View key={c.id} style={styles.flex}>
                   <ChoicePhoto choice={c} state={stateOf(c.id)} disabled={answered} showName tall onPress={() => answer(c.id)} />
-                  {i === 0 && (
-                    <View style={[styles.vs, { backgroundColor: colors.background, borderColor: colors.borderStrong }]}>
-                      <Txt variant="smallStrong">VS</Txt>
-                    </View>
-                  )}
                 </View>
               ))}
+              <View pointerEvents="none" style={[styles.vs, { backgroundColor: colors.background, borderColor: colors.borderStrong }]}>
+                <Txt variant="smallStrong">VS</Txt>
+              </View>
             </View>
           ) : question.layout === 'binary' ? (
             <View style={styles.binaryRow}>
@@ -506,6 +505,9 @@ export default function QuizSessionScreen() {
               </Txt>
             )}
           </View>
+          {!correctNow && answerLabel && question.layout !== 'binary' && (
+            <Txt variant="smallStrong">Bonne réponse : {answerLabel}</Txt>
+          )}
           <Txt variant="small" tone="secondary" numberOfLines={4}>
             {question.explanation}
           </Txt>
@@ -599,7 +601,8 @@ const styles = StyleSheet.create({
   duel: { flexDirection: 'row', gap: 12 },
   vs: {
     position: 'absolute',
-    right: -24,
+    left: '50%',
+    marginLeft: -18,
     top: '42%',
     width: 36,
     height: 36,

@@ -39,3 +39,12 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Faunapedia — conventions du projet
+
+- Tout le contenu visible est en **français**. Utiliser l’apostrophe typographique `’` dans les textes ; `Txt` applique automatiquement les espaces fines (`frTypo`).
+- Les fiches rédigées vivent dans `src/data/curated/` ; les données enrichies (`src/data/generated/enrichment.json`) sont produites par `npm run data:build` et ne doivent pas être éditées à la main.
+- La logique pure (quiz, recherche, progression, formats) est dans `src/lib/` et couverte par des tests Jest : la garder sans dépendance à React Native.
+- **React Compiler est actif** : ne pas utiliser d’assertion non nulle (`x!.prop`) dans une closure passée à un hook — le compilateur lit ses dépendances pendant le rendu. Extraire la valeur avant (`const name = t?.name ?? ''`). Pas de `Math.random()` / `Date.now()` pendant le rendu (seulement dans les gestionnaires d’événements).
+- Les écrans d’onglets utilisent `TabScreen` (encarts gérés par les onglets natifs sur iOS) ; les écrans empilés utilisent `StackScreen`.
+- Avant de livrer : `npm run typecheck`, `npm run lint`, `npm test`.

@@ -35,6 +35,13 @@ function statValue(s: Species, key: keyof Stats): number | undefined {
   return typeof v === 'number' ? v : v[1];
 }
 
+/** Couleurs des deux camps : celle du groupe, ou un bleu si les deux espèces partagent le même groupe. */
+function duelColors(a: Species, b: Species): [string, string] {
+  const ca = GROUPS[a.group].color;
+  const cb = GROUPS[b.group].color;
+  return [ca, ca === cb ? '#7DD3FC' : cb];
+}
+
 function kinshipText(a: Species, b: Species): { title: string; text: string } {
   const anc = commonAncestor(a, b);
   if (!anc) return { title: 'Parenté inconnue', text: 'Classification indisponible pour l’une des espèces.' };
@@ -76,6 +83,7 @@ export default function CompareScreen() {
     const ids = new Set(b.taxonomy.map((t) => t.id));
     return a.taxonomy.filter((t) => ids.has(t.id));
   }, [a, b]);
+  const [colorA, colorB] = duelColors(a, b);
   const commonHabitats = a.habitats.filter((h) => b.habitats.includes(h));
   const commonRegions = a.regions.filter((r) => b.regions.includes(r));
 
@@ -152,8 +160,8 @@ export default function CompareScreen() {
                     </Txt>
                   )}
                 </View>
-                <Bar label={va !== undefined ? row.fmt(va) : '—'} ratio={(va ?? 0) / max} color={GROUPS[a.group].color} win={winner === 'a'} />
-                <Bar label={vb !== undefined ? row.fmt(vb) : '—'} ratio={(vb ?? 0) / max} color={GROUPS[b.group].color} win={winner === 'b'} />
+                <Bar label={va !== undefined ? row.fmt(va) : '—'} ratio={(va ?? 0) / max} color={colorA} win={winner === 'a'} />
+                <Bar label={vb !== undefined ? row.fmt(vb) : '—'} ratio={(vb ?? 0) / max} color={colorB} win={winner === 'b'} />
               </View>
             );
           })}
@@ -257,11 +265,12 @@ function DualScale({ a, b }: { a: Species; b: Species }) {
   const scale = width ? Math.min((width - 24) / sceneW, (height - 20) / sceneH) : 0;
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
-  const draw = (s: Species, box: { width: number; height: number }) =>
+  const [colorA, colorB] = duelColors(a, b);
+  const draw = (s: Species, box: { width: number; height: number }, color: string) =>
     s.silhouette ? (
-      <Image source={{ uri: s.silhouette.url }} style={{ width: box.width * scale, height: box.height * scale }} contentFit="contain" tintColor={GROUPS[s.group].color} />
+      <Image source={{ uri: s.silhouette.url }} style={{ width: box.width * scale, height: box.height * scale }} contentFit="contain" tintColor={color} />
     ) : (
-      <View style={{ width: box.width * scale, height: box.height * scale, backgroundColor: alpha(GROUPS[s.group].color, 0.4), borderRadius: 6 }} />
+      <View style={{ width: box.width * scale, height: box.height * scale, backgroundColor: alpha(color, 0.4), borderRadius: 6 }} />
     );
 
   return (
@@ -274,9 +283,9 @@ function DualScale({ a, b }: { a: Species; b: Species }) {
               <View style={{ width: gap * scale }} />
             </>
           )}
-          {draw(a, boxA)}
+          {draw(a, boxA, colorA)}
           <View style={{ width: gap * scale }} />
-          {draw(b, boxB)}
+          {draw(b, boxB, colorB)}
         </View>
       )}
       <View style={styles.scaleLegend}>
@@ -285,10 +294,10 @@ function DualScale({ a, b }: { a: Species; b: Species }) {
             Humain 1,75 m
           </Txt>
         )}
-        <Txt variant="caption" color={GROUPS[a.group].color}>
+        <Txt variant="caption" color={colorA}>
           {a.name}
         </Txt>
-        <Txt variant="caption" color={GROUPS[b.group].color}>
+        <Txt variant="caption" color={colorB}>
           {b.name}
         </Txt>
       </View>

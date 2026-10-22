@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -61,7 +61,8 @@ export default function DiscoverScreen() {
     const list = pool.length ? pool : SPECIES;
     router.push(`/species/${list[Math.floor(Math.random() * list.length)].id}`);
   };
-  useShake(surprise);
+  // L’accéléromètre n’écoute que lorsque l’accueil est affiché.
+  useShake(surprise, useIsFocused());
 
   const dateLabel = capitalize(now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }));
 

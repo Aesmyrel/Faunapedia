@@ -79,7 +79,7 @@ function SoundMedia({ taxonId, color, onUnavailable, reveal }: { taxonId: number
           <Icon icon={mci('waveform')} size={44} color={color} />
         </View>
       )}
-      {sounds.loading ? <Loading label="Chargement de l’enregistrement…" /> : clip ? <ClipPlayer clip={clip} color={color} autoPlay compact /> : null}
+      {sounds.loading ? <Loading label="Chargement de l’enregistrement…" /> : clip ? <ClipPlayer clip={clip} color={color} autoPlay compact hidePlace={!reveal} /> : null}
     </View>
   );
 }

@@ -21,7 +21,20 @@ function ensureAudioMode() {
 }
 
 /** Lecteur d’un enregistrement de terrain. */
-export function ClipPlayer({ clip, color, autoPlay, compact }: { clip: SoundClip; color: string; autoPlay?: boolean; compact?: boolean }) {
+export function ClipPlayer({
+  clip,
+  color,
+  autoPlay,
+  compact,
+  hidePlace,
+}: {
+  clip: SoundClip;
+  color: string;
+  autoPlay?: boolean;
+  compact?: boolean;
+  /** Masque le lieu d’enregistrement (indice trop révélateur en quiz). */
+  hidePlace?: boolean;
+}) {
   const { colors } = useTheme();
   const player = useAudioPlayer(clip.url);
   const status = useAudioPlayerStatus(player);
@@ -49,7 +62,7 @@ export function ClipPlayer({ clip, color, autoPlay, compact }: { clip: SoundClip
       <View style={styles.info}>
         <ProgressBar progress={progress} color={color} height={4} />
         <Txt variant="caption" tone="muted" numberOfLines={1}>
-          {clip.place ? `${clip.place} · ` : ''}
+          {clip.place && !hidePlace ? `${clip.place} · ` : ''}
           {clip.attribution.replace(/, some rights reserved.*$/, '').replace(/^\(c\)\s*/, '© ')} · {clip.license}
         </Txt>
       </View>

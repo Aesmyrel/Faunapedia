@@ -8,7 +8,7 @@
     "scheme": "faunapedia",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "app.faunapedia"
     },
     "android": {
@@ -42,7 +42,8 @@
         {
           "locationWhenInUsePermission": "Faunapedia utilise votre position pour afficher les espèces observées autour de vous."
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true,

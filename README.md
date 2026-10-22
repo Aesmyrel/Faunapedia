@@ -59,7 +59,7 @@ Plus de quinze types de questions (identification par photo, photo à retrouver,
 
 ## Essayer sur votre téléphone
 
-Prérequis : [Node.js](https://nodejs.org) 20 ou plus, et l’application **Expo Go** sur votre téléphone ([iOS](https://apps.apple.com/app/expo-go/id982107779) · [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
+Prérequis : [Node.js](https://nodejs.org) 22 ou plus, et l’application **Expo Go** sur votre téléphone ([iOS](https://apps.apple.com/app/expo-go/id982107779) · [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)).
 
 ```bash
 git clone https://github.com/Aesmyrel/Faunapedia.git

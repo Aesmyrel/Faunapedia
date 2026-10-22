@@ -1,4 +1,3 @@
-import { Image } from 'expo-image';
 import { useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
@@ -8,9 +7,10 @@ import { GROUPS } from '@/data/reference';
 import type { Species } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
 import { formatLength } from '@/lib/format';
+import { animalBox } from '@/lib/scale';
 
-import { Icon } from '../ui/icon';
 import { Txt } from '../ui/text';
+import { AnimalFigure } from './animal-figure';
 
 interface Reference {
   label: string;
@@ -19,19 +19,12 @@ interface Reference {
   kind: 'human' | 'card' | 'coin';
 }
 
-const HUMAN: Reference = { label: 'Humain', width: 50, height: 175, kind: 'human' };
+/** Boîte de la silhouette humaine : mêmes proportions que son tracé (60 × 175), sans quoi elle serait rapetissée. */
+export const HUMAN_BOX = { width: 60, height: 175 };
+
+const HUMAN: Reference = { label: 'Humain', ...HUMAN_BOX, kind: 'human' };
 const CARD: Reference = { label: 'Carte bancaire', width: 8.56, height: 5.4, kind: 'card' };
 const COIN: Reference = { label: 'Pièce de 1 €', width: 2.325, height: 2.325, kind: 'coin' };
-
-/** Dimensions affichées de l’animal (cm) et la mesure qui les fonde. */
-export function animalBox(s: Species): { width: number; height: number; basis: string } | null {
-  const ratio = s.silhouette?.ratio ?? 1.6;
-  const { length, height, wingspan } = s.stats;
-  if (length) return { width: length[1], height: length[1] / ratio, basis: `longueur ${formatLength(length[1])}` };
-  if (height) return { width: height[1] * ratio, height: height[1], basis: `hauteur ${formatLength(height[1])}` };
-  if (wingspan) return { width: wingspan[1], height: wingspan[1] / Math.max(ratio, 1.5), basis: `envergure ${formatLength(wingspan[1])}` };
-  return null;
-}
 
 function referenceFor(maxDim: number): Reference {
   if (maxDim >= 30) return HUMAN;
@@ -57,7 +50,8 @@ export function ScaleView({ species, height = 200 }: { species: Species; height?
 
   return (
     <View onLayout={onLayout} style={[styles.wrap, { backgroundColor: colors.surface, borderColor: colors.border, height: height + 46 }]}>
-      <View style={[styles.ground, { top: height - 14, backgroundColor: colors.borderStrong }]} />
+      {/* Le sol tombe au pied de la scène, décalée par la marge intérieure du cadre. */}
+      <View style={[styles.ground, { top: height - 2, backgroundColor: colors.borderStrong }]} />
       {scale > 0 && (
         <View style={[styles.scene, { height: height - 14 }]}>
           <View style={styles.item}>
@@ -65,19 +59,7 @@ export function ScaleView({ species, height = 200 }: { species: Species; height?
           </View>
           <View style={{ width: gap * scale }} />
           <View style={styles.item}>
-            {species.silhouette ? (
-              <Image
-                source={{ uri: species.silhouette.url }}
-                style={{ width: box.width * scale, height: box.height * scale }}
-                contentFit="contain"
-                tintColor={color}
-                accessibilityLabel={`Silhouette : ${species.name}`}
-              />
-            ) : (
-              <View style={[styles.placeholder, { width: box.width * scale, height: box.height * scale, backgroundColor: alpha(color, 0.3) }]}>
-                <Icon icon={GROUPS[species.group].icon} size={Math.min(24, box.height * scale * 0.6)} color={color} />
-              </View>
-            )}
+            <AnimalFigure species={species} box={box} scale={scale} color={color} />
           </View>
         </View>
       )}
@@ -87,9 +69,10 @@ export function ScaleView({ species, height = 200 }: { species: Species; height?
         </Txt>
         <Txt variant="caption" color={color} align="right" style={styles.flex}>
           {species.name} · {box.basis}
+          {box.stretched ? ', étiré' : box.rotated ? ', vu de dessus' : ''}
         </Txt>
       </View>
-      {species.silhouette && !species.silhouette.exact && (
+      {species.silhouette && !species.silhouette.exact && !box.stretched && (
         <Txt variant="caption" tone="muted" style={styles.note}>
           Silhouette d’une espèce proche (PhyloPic)
         </Txt>
@@ -136,7 +119,6 @@ const styles = StyleSheet.create({
   ground: { position: 'absolute', left: 12, right: 12, height: StyleSheet.hairlineWidth },
   scene: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'center' },
   item: { justifyContent: 'flex-end', alignItems: 'center' },
-  placeholder: { borderRadius: Radius.sm, alignItems: 'center', justifyContent: 'center' },
   legend: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, gap: 10 },
   flex: { flex: 1 },
   note: { marginTop: 2 },

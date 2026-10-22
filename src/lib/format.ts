@@ -88,9 +88,10 @@ export function formatLifespan(range: Range | number): string {
   return `${formatNumber(lo.value, 0)}${NBSP}${plural(lo.value, lo)} – ${formatNumber(hi.value, 0)}${NBSP}${plural(hi.value, hi)}`;
 }
 
-/** Applique la typographie française (espaces fines avant ; : ! ? et dans les guillemets). */
+/** Applique la typographie française (apostrophes courbes, espaces fines avant ; : ! ? et dans les guillemets). */
 export function frTypo(text: string): string {
   return text
+    .replace(/([A-Za-zÀ-ÖØ-öø-ÿŒœ])'(?=[A-Za-zÀ-ÖØ-öø-ÿŒœ])/g, '$1’')
     .replace(/ ([;:!?»])/g, `${NNBSP}$1`)
     .replace(/« /g, `«${NNBSP}`)
     .replace(/(\d) (\d{3})\b/g, `$1${NNBSP}$2`)

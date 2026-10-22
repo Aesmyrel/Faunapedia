@@ -1,11 +1,11 @@
-import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
+import { AnimalFigure } from '@/components/species/animal-figure';
+import { HUMAN_BOX, HumanFigure } from '@/components/species/scale-view';
 import { SpeciesImage } from '@/components/species/species-image';
 import { SpeciesPicker } from '@/components/species/species-picker';
-import { animalBox, HumanFigure } from '@/components/species/scale-view';
 import { Icon, mci } from '@/components/ui/icon';
 import { Section } from '@/components/ui/section';
 import { StackScreen } from '@/components/ui/stack-screen';
@@ -18,6 +18,7 @@ import { GROUPS, HABITATS, RANKS, REGIONS } from '@/data/reference';
 import type { Species, Stats } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
 import { capitalize, formatLength, formatLifespan, formatNumber, formatSpeed, formatWeight } from '@/lib/format';
+import { type AnimalBox, animalBox } from '@/lib/scale';
 import { useStore } from '@/store';
 
 const ROWS: { key: keyof Stats; label: string; fmt: (v: number) => string }[] = [
@@ -257,7 +258,7 @@ function DualScale({ a, b }: { a: Species; b: Species }) {
   }
   const height = 190;
   const maxDim = Math.max(boxA.width, boxA.height, boxB.width, boxB.height);
-  const human = maxDim >= 30 ? { w: 50, h: 175 } : null;
+  const human = maxDim >= 30 ? { w: HUMAN_BOX.width, h: HUMAN_BOX.height } : null;
   const parts = [human?.w ?? 0, boxA.width, boxB.width];
   const gap = maxDim * 0.12;
   const sceneW = parts.reduce((s, x) => s + x, 0) + gap * (human ? 2 : 1);
@@ -266,12 +267,7 @@ function DualScale({ a, b }: { a: Species; b: Species }) {
   const onLayout = (e: LayoutChangeEvent) => setWidth(e.nativeEvent.layout.width);
 
   const [colorA, colorB] = duelColors(a, b);
-  const draw = (s: Species, box: { width: number; height: number }, color: string) =>
-    s.silhouette ? (
-      <Image source={{ uri: s.silhouette.url }} style={{ width: box.width * scale, height: box.height * scale }} contentFit="contain" tintColor={color} />
-    ) : (
-      <View style={{ width: box.width * scale, height: box.height * scale, backgroundColor: alpha(color, 0.4), borderRadius: 6 }} />
-    );
+  const draw = (s: Species, box: AnimalBox, color: string) => <AnimalFigure species={s} box={box} scale={scale} color={color} />;
 
   return (
     <View onLayout={onLayout} style={[styles.scale, { backgroundColor: colors.surface, borderColor: colors.border, height: height + 40 }]}>

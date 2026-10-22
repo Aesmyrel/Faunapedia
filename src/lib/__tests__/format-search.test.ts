@@ -25,6 +25,7 @@ describe('format', () => {
 
   it('applique la typographie française', () => {
     expect(frTypo('Vrai ou faux ?')).toBe(`Vrai ou faux${NNBSP}?`);
+    expect(frTypo("L'Aigle royal est une espèce d'oiseaux.")).toBe('L’Aigle royal est une espèce d’oiseaux.');
   });
 
   it('normalise accents et apostrophes', () => {

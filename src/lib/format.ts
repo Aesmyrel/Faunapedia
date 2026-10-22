@@ -101,11 +101,29 @@ export function plural(n: number, singular: string, pluralForm = `${singular}s`)
   return `${formatNumber(n, 0)} ${n >= 2 ? pluralForm : singular}`;
 }
 
+const ACCENTS: Record<string, string> = {
+  à: 'a', â: 'a', ä: 'a', á: 'a', ã: 'a', å: 'a',
+  ç: 'c',
+  é: 'e', è: 'e', ê: 'e', ë: 'e',
+  î: 'i', ï: 'i', í: 'i', ì: 'i',
+  ñ: 'n',
+  ô: 'o', ö: 'o', ó: 'o', ò: 'o', õ: 'o', ø: 'o',
+  û: 'u', ü: 'u', ù: 'u', ú: 'u',
+  ÿ: 'y', ý: 'y',
+};
+
+/** Retire les diacritiques, avec un repli si `String.normalize` est indisponible. */
+function stripAccents(text: string): string {
+  try {
+    return text.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  } catch {
+    return text.toLowerCase().replace(/[à-ÿ]/g, (c) => ACCENTS[c] ?? c);
+  }
+}
+
 /** Retire accents et casse pour les comparaisons de recherche. */
 export function normalize(text: string): string {
-  return text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+  return stripAccents(text)
     .replace(/[’'`]/g, ' ')
     .replace(/œ/g, 'oe')
     .replace(/æ/g, 'ae')

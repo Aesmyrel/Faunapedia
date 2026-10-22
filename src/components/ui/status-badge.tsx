@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { alpha, Radius } from '@/constants/theme';
+import { alpha, Fonts, Radius } from '@/constants/theme';
 import { IUCN, IUCN_SCALE } from '@/data/reference';
 import type { IucnStatus } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
@@ -66,5 +66,5 @@ const styles = StyleSheet.create({
   scale: { flexDirection: 'row', gap: 4 },
   step: { flex: 1, alignItems: 'center', gap: 6 },
   segment: { height: 8, borderRadius: 4, alignSelf: 'stretch' },
-  activeCode: { fontWeight: '700' },
+  activeCode: { fontFamily: Fonts.bold },
 });

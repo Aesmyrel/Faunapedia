@@ -205,6 +205,9 @@ const STOP_WORDS = new Set([
   'bleu', 'bleue', 'vert', 'verte', 'gris', 'grise', 'royal', 'japon', 'chine', 'asie',
 ]);
 
+/** Lettres latines, accentuées comprises (sans `\p{L}`, pour rester compatible avec tous les moteurs JS). */
+const LETTERS = 'A-Za-zÀ-ÖØ-öø-ÿŒœ';
+
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Masque le nom de l’espèce (et ses variantes) dans un texte d’indice. */
@@ -219,7 +222,7 @@ export function maskName(text: string, s: Species): string {
     out = out.replace(new RegExp(`\\b${escapeRe(n)}s?\\b`, 'gi'), '…');
   }
   for (const w of words) {
-    out = out.replace(new RegExp(`(^|[^\\p{L}])${escapeRe(w)}(s|x)?(?=$|[^\\p{L}])`, 'giu'), '$1…');
+    out = out.replace(new RegExp(`(^|[^${LETTERS}])${escapeRe(w)}(s|x)?(?=$|[^${LETTERS}])`, 'gi'), '$1…');
   }
   return out;
 }

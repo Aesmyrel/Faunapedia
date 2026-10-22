@@ -1,0 +1,70 @@
+# Compile l’application Android (APK) et la publie dans la release « android »,
+# téléchargeable directement depuis un téléphone :
+# https://github.com/Aesmyrel/Faunapedia/releases/download/android/Faunapedia.apk
+name: APK Android
+
+on:
+  push:
+    branches: [ccr-10380273-f1fe6a]
+    paths-ignore: ['**.md', 'docs/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Dépendances
+        run: npm ci
+
+      - name: Projet natif (génération continue)
+        run: npx expo prebuild --platform android --no-install
+
+      # Une seule architecture (arm64, tous les smartphones récents) : compilation deux fois plus rapide.
+      - name: Compilation
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g"
+
+      - name: APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk Faunapedia.apk
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: Faunapedia-apk
+          path: Faunapedia.apk
+          retention-days: 14
+
+      - name: Publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES="Version du $(date -u +'%d/%m/%Y à %H:%M') UTC (${GITHUB_SHA::7}).
+
+          Installation sur Android : téléchargez Faunapedia.apk depuis le téléphone, ouvrez-le, puis autorisez l’installation lorsque le téléphone le demande. Les nouvelles versions s’installent par-dessus l’ancienne en conservant la progression."
+          if gh release view android > /dev/null 2>&1; then
+            gh release upload android Faunapedia.apk --clobber
+            gh release edit android --notes "$NOTES"
+          else
+            gh release create android Faunapedia.apk --title "Faunapedia pour Android" --notes "$NOTES" --prerelease --target "$GITHUB_SHA"
+          fi

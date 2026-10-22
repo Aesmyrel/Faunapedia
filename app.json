@@ -49,6 +49,9 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "backgroundColor": "#07090B"
+    "backgroundColor": "#07090B",
+    "extra": {
+      "shareUrl": "https://github.com/Aesmyrel/Faunapedia"
+    }
   }
 }

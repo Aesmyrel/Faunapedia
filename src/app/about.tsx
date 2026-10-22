@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StyleSheet, View } from 'react-native';
 
@@ -45,6 +46,7 @@ const SOURCES = [
 ];
 
 export default function AboutScreen() {
+  const router = useRouter();
   const { colors } = useTheme();
   return (
     <StackScreen>
@@ -53,8 +55,14 @@ export default function AboutScreen() {
         color="#E8B04B"
         eyebrow="Projet passion, sans publicité ni collecte de données"
         title="Faunapedia"
-        description={`Une encyclopédie zoologique de poche pour les passionnés : ${SPECIES.length} fiches rédigées avec soin, et l’arbre du vivant complet consultable en direct.`}
-      />
+        description={`Une encyclopédie zoologique de poche pour les passionnés : ${SPECIES.length} fiches rédigées avec soin, et l’arbre du vivant complet consultable en direct.`}>
+        <Tap onPress={() => router.push('/share')} style={[styles.share, { backgroundColor: colors.accentSoft }]} haptic="select">
+          <Icon icon={mci('share-variant')} size={18} color={colors.accent} />
+          <Txt variant="smallStrong" tone="accent">
+            Partager l’application
+          </Txt>
+        </Tap>
+      </HeroHeader>
       <Section title="D’où viennent les données ?">
         <View style={styles.list}>
           {SOURCES.map((s) => (
@@ -92,6 +100,7 @@ export default function AboutScreen() {
 }
 
 const styles = StyleSheet.create({
+  share: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, marginTop: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: Radius.pill },
   list: { gap: 10 },
   source: { flexDirection: 'row', gap: 14, padding: 14, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth },
   flex: { flex: 1, gap: 2 },

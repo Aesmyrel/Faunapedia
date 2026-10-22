@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CollectionCard } from '@/components/home/collection-card';
 import { GroupTile } from '@/components/home/group-tile';
+import { ShareAppCard } from '@/components/share/share-app-card';
 import { SpeciesCard } from '@/components/species/species-card';
 import { Carousel } from '@/components/ui/carousel';
 import { Icon, mci } from '@/components/ui/icon';
@@ -189,6 +190,10 @@ export default function DiscoverScreen() {
         </Section>
       )}
 
+      <View style={styles.share}>
+        <ShareAppCard />
+      </View>
+
       <Txt variant="caption" tone="muted" align="center" style={styles.footer}>
         Photos et observations : contributeurs iNaturalist (licences Creative Commons) · Textes : Wikipédia · Cartes : GBIF ·
         Silhouettes : PhyloPic
@@ -245,5 +250,6 @@ const styles = StyleSheet.create({
   fieldGrid: { gap: 12 },
   field: { padding: 16, gap: 8, borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
   fieldIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  footer: { paddingHorizontal: 32, marginTop: 36, marginBottom: 8, lineHeight: 17 },
+  share: { paddingHorizontal: Gutter, marginTop: 36 },
+  footer: { paddingHorizontal: 32, marginTop: 28, marginBottom: 8, lineHeight: 17 },
 });

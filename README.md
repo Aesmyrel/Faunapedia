@@ -52,6 +52,7 @@ Plus de quinze types de questions (identification par photo, photo à retrouver,
 - **Autour de moi** : les espèces réellement observées près de vous… ou en voyage virtuel (Camargue, Serengeti, Galápagos, Bornéo…).
 - **16 collections thématiques** : records, abysses, faune de France (outre-mer compris), venimeux et vénéneux, camouflage, fossiles vivants, migrateurs, espèces disparues…
 - **Surprends-moi** : secouez le téléphone pour découvrir une espèce au hasard.
+- **Partager l’application** : un QR code à faire scanner et un lien à envoyer, depuis l’accueil, le carnet ou « À propos ».
 - Thème sombre (pensé pour les écrans OLED) et clair, retours haptiques, onglets natifs **Liquid Glass** sur iOS 26.
 
 ---
@@ -74,6 +75,8 @@ Pour installer une vraie application autonome (APK Android ou build iOS interne)
 ```bash
 npx eas-cli@latest build --profile preview --platform android
 ```
+
+Le lien proposé par l’écran « Partager Faunapedia » (QR code compris) se règle dans `app.json`, clé `expo.extra.shareUrl` : remplacez-le par exemple par le lien d’installation fourni par EAS. Pour l’aperçu web, relancez ensuite l’export avec `--clear` afin que la nouvelle valeur soit prise en compte.
 
 ## Développement
 

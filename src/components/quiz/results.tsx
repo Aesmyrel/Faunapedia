@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Share, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
 import { alpha, Gutter, Radius } from '@/constants/theme';
@@ -10,6 +10,7 @@ import type { ModeInfo, Question } from '@/lib/quiz';
 import type { QuizReward } from '@/store';
 import { useStore } from '@/store';
 
+import { APP_URL, shareContent } from '../share/share';
 import { SpeciesImage } from '../species/species-image';
 import { Icon, mci } from '../ui/icon';
 import { ProgressBar, ProgressRing } from '../ui/progress-ring';
@@ -65,9 +66,11 @@ export function QuizResults({
   const celebrate = (reward?.perfect || reward?.record) && correct > 0;
 
   const share = () => {
-    Share.share({
+    shareContent({
       message: `Faunapedia · ${info.title} : ${endless ? `${correct} bonnes réponses` : `${correct}/${total}`} (${points} points) 🦉`,
-    }).catch(() => {});
+      url: APP_URL,
+      title: 'Faunapedia',
+    });
   };
 
   return (

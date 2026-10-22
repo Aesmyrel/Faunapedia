@@ -1,7 +1,7 @@
 import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Share, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   FadeIn,
   interpolate,
@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { APP_URL, shareContent } from '@/components/share/share';
 import { DistributionMap } from '@/components/species/distribution-map';
 import { PhotoHero } from '@/components/species/photo-hero';
 import { ScaleView } from '@/components/species/scale-view';
@@ -82,9 +83,11 @@ export default function SpeciesScreen() {
   const contentW = Math.min(width, MaxContentWidth);
 
   const share = () => {
-    Share.share({
+    shareContent({
       message: `${s.name} (${s.sci}) — ${s.record ?? s.facts[0]}\n\nDécouvert sur Faunapedia.`,
-    }).catch(() => {});
+      url: APP_URL,
+      title: s.name,
+    });
   };
 
   return (

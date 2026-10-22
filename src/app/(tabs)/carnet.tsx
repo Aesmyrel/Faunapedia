@@ -183,6 +183,7 @@ export default function NotebookScreen() {
           />
         </View>
         <View style={styles.links}>
+          <LinkRow icon="share-variant" label="Partager l’application" onPress={() => router.push('/share')} />
           <LinkRow icon="information-outline" label="À propos, sources et crédits" onPress={() => router.push('/about')} />
           <LinkRow icon="restore" label="Réinitialiser ma progression" danger onPress={() => setConfirmReset(true)} />
         </View>

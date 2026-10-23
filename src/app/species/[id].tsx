@@ -226,6 +226,15 @@ export default function SpeciesScreen() {
         {s.taxonomy.length > 0 && (
           <Section title="Classification" eyebrow="Place dans l’arbre du vivant">
             <TaxonomyLadder taxonomy={s.taxonomy} color={color} />
+            <View style={styles.treeLink}>
+              <ActionButton
+                icon="graph-outline"
+                label="Voir dans l’arbre des espèces"
+                sub="Sa branche parmi toutes les autres"
+                color={color}
+                onPress={() => router.push({ pathname: '/arbre', params: { espece: s.id } })}
+              />
+            </View>
           </Section>
         )}
 
@@ -409,6 +418,7 @@ const styles = StyleSheet.create({
   lore: { gap: 8, padding: 16, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, borderLeftWidth: 3 },
   loreHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   factNum: { fontSize: 22, lineHeight: 26, minWidth: 30 },
+  treeLink: { flexDirection: 'row', marginTop: 14 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 30, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   action: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: Radius.lg, borderWidth: 1 },
   credits: { gap: 8 },

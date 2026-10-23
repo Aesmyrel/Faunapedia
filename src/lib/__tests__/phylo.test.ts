@@ -1,6 +1,6 @@
 import { SPECIES } from '@/data';
 
-import { buildTree, layoutTree, leafAt, lineage, lineagePath, polar } from '../phylo';
+import { buildTree, cladeLabel, groupSectors, layoutTree, lineage, lineagePath, litPaths, nearestLeaf, type PhyloNode } from '../phylo';
 
 describe('arbre des espèces', () => {
   const root = buildTree(SPECIES);
@@ -32,10 +32,36 @@ describe('arbre des espèces', () => {
     expect(layout.labels.map((l) => l.name)).toEqual(expect.arrayContaining(['Mammalia', 'Aves', 'Insecta']));
   });
 
-  it('retrouve l’espèce touchée', () => {
+  it('retrouve l’espèce touchée par son angle, même au passage du tour', () => {
     const tiger = layout.leaves.find((l) => l.id === 'tigre')!;
-    const [x, y] = polar(layout.center, tiger.radius, tiger.angle);
-    expect(leafAt(layout, x + 1, y - 1, 10)?.id).toBe('tigre');
-    expect(leafAt(layout, layout.center, layout.center, 10)).toBeUndefined();
+    expect(nearestLeaf(layout, tiger.angle + 0.001).id).toBe('tigre');
+    expect(nearestLeaf(layout, tiger.angle + Math.PI * 2).id).toBe('tigre');
+    const first = layout.leaves[0];
+    const last = layout.leaves[layout.leaves.length - 1];
+    expect(nearestLeaf(layout, first.angle - 0.0001).id).toBe(first.id);
+    expect(nearestLeaf(layout, last.angle + 0.0001).id).toBe(last.id);
+  });
+
+  it('range les groupes dans l’ordre de l’app, des mammifères aux autres invertébrés', () => {
+    const sectors = groupSectors(layout);
+    expect(sectors[0].group).toBe('mammals');
+    expect(new Set(sectors.map((s) => s.group)).size).toBe(sectors.length);
+    for (let i = 1; i < sectors.length; i++) expect(sectors[i].angle).toBeGreaterThan(sectors[i - 1].angle);
+    const mammals = sectors[0];
+    expect(mammals.leaves.every((l) => l.group === 'mammals')).toBe(true);
+  });
+
+  it('abrège les noms de clades', () => {
+    const node = (name: string, fr?: string) => ({ name, fr }) as PhyloNode;
+    expect(cladeLabel(node('Lepidoptera', 'Lépidoptères (Papillons)'))).toBe('Lépidoptères');
+    expect(cladeLabel(node('Strigiformes', 'Hiboux, Chouettes et apparentés'))).toBe('Hiboux, chouettes');
+    expect(cladeLabel(node('Eulipotyphla', 'Musaraignes, hérissons, taupes et apparentés'))).toBe('Musaraignes, hérissons');
+    expect(cladeLabel(node('Perciformes'))).toBe('Perciformes');
+  });
+
+  it('n’illumine que les lignées des espèces découvertes', () => {
+    const paths = litPaths(layout, (id) => id === 'lion' || id === 'tigre');
+    expect(Object.keys(paths)).toEqual(['mammals']);
+    expect(litPaths(layout, () => false)).toEqual({});
   });
 });

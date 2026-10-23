@@ -35,6 +35,8 @@ export interface PhyloLayout {
 }
 
 const groupRank = (g: GroupId | undefined) => (g ? GROUP_ORDER.indexOf(g) : GROUP_ORDER.length);
+/** Rang du premier groupe présent dans la branche : les vertébrés passent devant les arthropodes, etc. */
+const firstGroup = (n: PhyloNode): number => (n.children.length ? Math.min(...n.children.map(firstGroup)) : groupRank(n.group));
 
 /** Assemble l’arbre : règne → embranchement → classe → ordre → famille → genre → espèce. */
 export function buildTree(species: Species[]): PhyloNode {
@@ -61,7 +63,7 @@ export function buildTree(species: Species[]): PhyloNode {
     const groups = new Set(n.children.map((c) => c.group ?? 'mixed'));
     n.group = groups.size === 1 && !groups.has('mixed') ? n.children[0].group : undefined;
     // Les groupes de l’app se suivent dans le même ordre que partout ailleurs.
-    n.children.sort((a, b) => groupRank(a.group) - groupRank(b.group) || b.leafCount - a.leafCount || a.name.localeCompare(b.name));
+    n.children.sort((a, b) => firstGroup(a) - firstGroup(b) || b.leafCount - a.leafCount || a.name.localeCompare(b.name));
   };
   finish(root);
   return root;
@@ -156,19 +158,70 @@ export function lineage(leaf: PhyloNode): PhyloNode[] {
   return out;
 }
 
-/** Feuille la plus proche d’un point (coordonnées du dessin), dans la limite de `tolerance`. */
-export function leafAt(layout: PhyloLayout, x: number, y: number, tolerance: number): PhyloNode | undefined {
-  let best: PhyloNode | undefined;
-  let bestD = tolerance * tolerance;
-  for (const leaf of layout.leaves) {
-    const [lx, ly] = polar(layout.center, leaf.radius, leaf.angle);
-    const d = (lx - x) ** 2 + (ly - y) ** 2;
-    if (d < bestD) {
-      bestD = d;
-      best = leaf;
-    }
+/** Espèce dont l’angle est le plus proche (les feuilles sont rangées par angle croissant). */
+export function nearestLeaf(layout: PhyloLayout, angle: number): PhyloNode {
+  const { leaves } = layout;
+  const first = leaves[0].angle;
+  // Ramène l’angle dans le tour qui commence à la première feuille.
+  const a = first + ((((angle - first) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
+  let lo = 0;
+  let hi = leaves.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (leaves[mid].angle < a) lo = mid + 1;
+    else hi = mid;
   }
-  return best;
+  // Voisines de part et d’autre, sans oublier le raccord entre la dernière et la première.
+  const candidates = [leaves[lo], leaves[lo - 1], leaves[0], leaves[leaves.length - 1]].filter((l) => l !== undefined);
+  const dist = (l: PhyloNode) => Math.abs(Math.atan2(Math.sin(a - l.angle), Math.cos(a - l.angle)));
+  return candidates.reduce((best, l) => (dist(l) < dist(best) ? l : best));
+}
+
+export interface GroupRun {
+  group: GroupId;
+  leaves: PhyloNode[];
+  /** Angle médian du secteur. */
+  angle: number;
+}
+
+/** Secteurs du cercle : une suite d’espèces voisines du même groupe. Ne garde que le plus grand secteur de chaque groupe. */
+export function groupSectors(layout: PhyloLayout): GroupRun[] {
+  const runs: GroupRun[] = [];
+  for (const leaf of layout.leaves) {
+    const group = leaf.group ?? 'others';
+    const last = runs[runs.length - 1];
+    if (last && last.group === group) last.leaves.push(leaf);
+    else runs.push({ group, leaves: [leaf], angle: 0 });
+  }
+  const best = new Map<GroupId, GroupRun>();
+  for (const run of runs) {
+    run.angle = (run.leaves[0].angle + run.leaves[run.leaves.length - 1].angle) / 2;
+    const current = best.get(run.group);
+    if (!current || run.leaves.length > current.leaves.length) best.set(run.group, run);
+  }
+  return runs.filter((r) => best.get(r.group) === r);
+}
+
+/** Nom court d’un clade pour le pourtour : nom français allégé, sinon nom savant. */
+export function cladeLabel(n: PhyloNode): string {
+  if (!n.fr) return n.name;
+  let name = n.fr
+    .replace(/\s*\(.*?\)/g, '')
+    .replace(/,?\s+et\s+apparentés$/i, '')
+    .trim();
+  while (name.length > 24 && name.includes(',')) name = name.slice(0, name.lastIndexOf(','));
+  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+/** Lignées des espèces découvertes, regroupées par couleur de groupe. */
+export function litPaths(layout: PhyloLayout, isLit: (id: string) => boolean): Partial<Record<GroupId, string>> {
+  const out: Partial<Record<GroupId, string>> = {};
+  for (const leaf of layout.leaves) {
+    if (!isLit(leaf.id)) continue;
+    const group = leaf.group ?? 'others';
+    out[group] = (out[group] ?? '') + lineagePath(leaf, layout.center);
+  }
+  return out;
 }
 
 export { polar };

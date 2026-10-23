@@ -1,4 +1,5 @@
 import { useRouter } from 'expo-router';
+import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 
@@ -46,6 +47,9 @@ export function QuizResults({
   reward,
   practice,
   onReplay,
+  replayLabel = 'Rejouer',
+  extra,
+  hideShare = false,
 }: {
   info: ModeInfo;
   played: PlayedQuestion[];
@@ -53,6 +57,11 @@ export function QuizResults({
   reward: QuizReward | null;
   practice: boolean;
   onReplay: () => void;
+  replayLabel?: string;
+  /** Contenu propre au mode, sous le score (le bilan d’un défi). */
+  extra?: ReactNode;
+  /** Le mode a son propre partage. */
+  hideShare?: boolean;
 }) {
   const router = useRouter();
   const { colors } = useTheme();
@@ -98,6 +107,8 @@ export function QuizResults({
         <StatBox label="XP gagnée" value={reward ? `+${reward.xp}` : '—'} color={colors.accent} />
         {reward?.streak ? <StatBox label="Série" value={`${reward.streak} 🔥`} color="#F97316" /> : null}
       </Animated.View>
+
+      {extra}
 
       {practice && (
         <Txt variant="small" tone="muted" align="center">
@@ -157,12 +168,14 @@ export function QuizResults({
         <Tap onPress={onReplay} style={[styles.primary, { backgroundColor: info.color }]}>
           <Icon icon={mci('replay')} size={20} color="#0B0B0B" />
           <Txt variant="subtitle" color="#0B0B0B">
-            Rejouer
+            {replayLabel}
           </Txt>
         </Tap>
-        <Tap onPress={share} style={[styles.secondary, { backgroundColor: colors.surfaceRaised }]} accessibilityLabel="Partager">
-          <Icon icon={mci('share-variant')} size={20} color={colors.text} />
-        </Tap>
+        {!hideShare && (
+          <Tap onPress={share} style={[styles.secondary, { backgroundColor: colors.surfaceRaised }]} accessibilityLabel="Partager">
+            <Icon icon={mci('share-variant')} size={20} color={colors.text} />
+          </Tap>
+        )}
       </View>
       <Tap onPress={() => (router.canGoBack() ? router.back() : router.replace('/quiz'))} style={styles.link}>
         <Txt variant="smallStrong" tone="secondary">

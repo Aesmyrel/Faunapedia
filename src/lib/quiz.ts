@@ -25,7 +25,8 @@ export type QuizMode =
   | 'silhouettes'
   | 'sounds'
   | 'review'
-  | 'species';
+  | 'species'
+  | 'challenge';
 
 export type QuestionKind =
   | 'photo-to-name'
@@ -183,6 +184,15 @@ export const MODES: Record<QuizMode, ModeInfo> = {
     description: 'Les espèces sur lesquelles vous avez trébuché reviennent à intervalles croissants, jusqu’à être maîtrisées.',
     icon: { set: 'mci', name: 'refresh' },
     color: '#FACC15',
+    length: 10,
+  },
+  challenge: {
+    id: 'challenge',
+    title: 'Défi entre amis',
+    tagline: '10 questions, les mêmes pour vous deux',
+    description: 'Jouez, envoyez votre code à un collègue ou un ami : il répond exactement aux mêmes questions, et vous comparez vos scores.',
+    icon: { set: 'mci', name: 'sword-cross' },
+    color: '#FB7185',
     length: 10,
   },
   species: {
@@ -997,7 +1007,7 @@ export function createQuiz(all: Species[], config: QuizConfig): Quiz {
     if (config.mode === 'survival') return (streak >= 12 ? 3 : streak >= 5 ? 2 : 1) as Difficulty;
     if (config.mode === 'duel') return (index >= 10 ? 3 : index >= 4 ? 2 : 1) as Difficulty;
     if (config.mode === 'expert') return 3;
-    if (config.mode === 'daily') return index < 3 ? 1 : index < 7 ? 2 : 3;
+    if (config.mode === 'daily' || config.mode === 'challenge') return index < 3 ? 1 : index < 7 ? 2 : 3;
     return config.difficulty ?? 2;
   };
 

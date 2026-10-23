@@ -30,6 +30,7 @@
 | Mode | Principe |
 |---|---|
 | **Défi du jour** | 10 questions identiques pour tous, chaque jour, avec série de jours consécutifs 🔥 |
+| **Défi entre amis** | 10 questions, exactement les mêmes pour deux joueurs : on envoie un code (« K7Q-2M4-XPB ») par message, l’autre joue et renvoie le sien, et l’appli affiche le vainqueur (ou le classement si plusieurs collègues répondent). Aucun compte ni serveur : le code porte les questions et le score |
 | **Partie rapide** | 10 questions variées ; difficulté et thème au choix |
 | **Qui suis-je ?** | Indices progressifs et photo floue qui se précise ; moins d’indices = plus de points |
 | **Plus ou moins** | Duels (plus lourd, plus rapide, plus long, vit plus longtemps) jusqu’à la première erreur |
@@ -108,6 +109,7 @@ src/
 │   ├── species/[id]     Fiche espèce
 │   ├── taxon/[id]       Arbre du vivant (en direct)
 │   ├── quiz/[mode]      Session de jeu
+│   ├── defi             Défier un ami : lancer, relever, historique
 │   └── …                groupe, collection, comparateur, autour de moi, badges, à propos
 ├── components/          Interface réutilisable (ui, species, quiz, home, taxon…)
 ├── data/

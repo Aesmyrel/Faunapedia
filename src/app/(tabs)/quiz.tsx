@@ -12,6 +12,7 @@ import { Tap } from '@/components/ui/tap';
 import { Txt } from '@/components/ui/text';
 import { alpha, Gutter, Radius } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { challengeOutcome } from '@/lib/challenge';
 import { todayKey } from '@/lib/format';
 import { dueReviews, levelFromXp } from '@/lib/progress';
 import { MODES, type QuizMode } from '@/lib/quiz';
@@ -36,6 +37,7 @@ export default function QuizScreen() {
   const daily = useStore((s) => s.daily);
   const review = useStore((s) => s.review);
   const badges = useStore((s) => s.badges);
+  const challenges = useStore((s) => s.challenges);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 30000);
@@ -49,6 +51,10 @@ export default function QuizScreen() {
   const due = dueReviews(review, now.getTime()).length;
   const accuracy = stats.answered ? Math.round((stats.correct / stats.answered) * 100) : 0;
   const dailyInfo = MODES.daily;
+  const challengeInfo = MODES.challenge;
+  const duels = challenges.flatMap((c) => (c.mine ? [{ mine: c.mine, rivals: c.rivals }] : []));
+  const wins = duels.filter((c) => c.rivals.length > 0 && c.rivals.every((r) => challengeOutcome(c.mine, r) !== 'lose')).length;
+  const waiting = duels.filter((c) => c.rivals.length === 0).length;
 
   return (
     <TabScreen>
@@ -115,6 +121,32 @@ export default function QuizScreen() {
               </Txt>
             </View>
           </View>
+        </Tap>
+      </Animated.View>
+
+      <Animated.View entering={FadeInDown.delay(140).duration(400)} style={styles.block}>
+        <Tap
+          onPress={() => router.push('/defi')}
+          style={[styles.challenge, { backgroundColor: colors.surface, borderColor: alpha(challengeInfo.color, 0.45) }]}
+          accessibilityLabel="Défier un ami">
+          <LinearGradient colors={[alpha(challengeInfo.color, 0.22), alpha(challengeInfo.color, 0)]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+          <View style={[styles.dailyIcon, { backgroundColor: alpha(challengeInfo.color, 0.22) }]}>
+            <Icon icon={challengeInfo.icon} size={26} color={challengeInfo.color} />
+          </View>
+          <View style={styles.flex}>
+            <Txt variant="label" color={challengeInfo.color}>
+              Défier un ami
+            </Txt>
+            <Txt variant="subtitle">Les mêmes questions pour vous deux</Txt>
+            <Txt variant="caption" tone="secondary">
+              {challenges.length === 0
+                ? 'Lancez un défi à un collègue ou relevez celui que vous avez reçu.'
+                : [wins > 0 ? `${wins} victoire${wins > 1 ? 's' : ''}` : null, waiting > 0 ? `${waiting} en attente de réponse` : null, `${challenges.length} défi${challenges.length > 1 ? 's' : ''}`]
+                    .filter(Boolean)
+                    .join(' · ')}
+            </Txt>
+          </View>
+          <Icon icon={mci('chevron-right')} size={22} color={colors.textMuted} />
         </Tap>
       </Animated.View>
 
@@ -202,6 +234,7 @@ const styles = StyleSheet.create({
   dailyTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   dailyIcon: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   dailyBottom: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  challenge: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',

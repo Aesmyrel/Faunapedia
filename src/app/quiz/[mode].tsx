@@ -5,6 +5,8 @@ import Animated, { Easing, FadeIn, FadeInDown, FadeInUp, SlideInDown } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChoiceBinary, ChoicePhoto, ChoiceRow, type ChoiceState } from '@/components/quiz/choice-button';
+import { ChallengeCard, pointsLabel, scoreLabel } from '@/components/challenge/challenge-card';
+import { DATA_VERSION } from '@/components/challenge/challenge-data';
 import { CluesPanel, QuestionMedia } from '@/components/quiz/question-media';
 import { type PlayedQuestion, QuizResults } from '@/components/quiz/results';
 import { Chip } from '@/components/ui/chip';
@@ -22,6 +24,7 @@ import type { GroupId } from '@/data/types';
 import { useHaptics } from '@/hooks/use-haptics';
 import { useHideSpiders } from '@/hooks/use-hide-spiders';
 import { useTheme } from '@/hooks/use-theme';
+import { decodeChallenge, newChallengeSeed } from '@/lib/challenge';
 import { capitalize, todayKey } from '@/lib/format';
 import { isArachnid } from '@/lib/phobia';
 import { dueReviews } from '@/lib/progress';
@@ -47,7 +50,7 @@ const PRAISE = ['Bravo !', 'Excellent !', 'Bien vu !', 'Parfait !', 'Impressionn
 const OOPS = ['Raté…', 'Pas cette fois', 'Dommage !', 'Presque !'];
 
 export default function QuizSessionScreen() {
-  const params = useLocalSearchParams<{ mode: string; difficulty?: string; group?: string; species?: string }>();
+  const params = useLocalSearchParams<{ mode: string; difficulty?: string; group?: string; species?: string; seed?: string; code?: string }>();
   const mode: QuizMode = params.mode && params.mode in MODES ? (params.mode as QuizMode) : 'quick';
   const info = MODES[mode];
   const router = useRouter();
@@ -61,6 +64,13 @@ export default function QuizSessionScreen() {
   const review = useStore((s) => s.review);
   const best = useStore((s) => s.stats.bestCorrect[mode]);
   const finishQuiz = useStore((s) => s.finishQuiz);
+  const recordChallenge = useStore((s) => s.recordChallenge);
+  const challenges = useStore((s) => s.challenges);
+  // Défi entre amis : code reçu (graine + score à battre) ou nouvelle graine.
+  const [received, setReceived] = useState(() => (params.code ? decodeChallenge(params.code) : null));
+  const [challengeSeed, setChallengeSeed] = useState(() => received?.seed ?? (Number(params.seed) || 0));
+  const challenge = mode === 'challenge' ? challenges.find((c) => c.seed === challengeSeed) : undefined;
+  const receivedCode = params.code?.replace(/[\s-]/g, '').toUpperCase();
   // Défi du jour déjà relevé : la partie devient un entraînement (figé au lancement).
   const practice = mode === 'daily' && daily.last === today;
   const [practiceRun, setPracticeRun] = useState(false);
@@ -110,10 +120,16 @@ export default function QuizSessionScreen() {
         bestCombo: best,
         answers: list.map((p) => ({ speciesIds: p.question.learnIds, correct: p.correct })),
       });
+      if (mode === 'challenge') {
+        recordChallenge(challengeSeed, {
+          mine: { correct, points: total },
+          rival: received && receivedCode ? { ...received.score, code: receivedCode } : undefined,
+        });
+      }
       setReward(r);
       setPhase('results');
     },
-    [finishQuiz, mode, practiceRun],
+    [finishQuiz, mode, practiceRun, recordChallenge, challengeSeed, received, receivedCode],
   );
 
   const load = (source: Quiz | null, i: number, streak: number) => {
@@ -145,12 +161,13 @@ export default function QuizSessionScreen() {
     setPracticeRun(practice);
     const q = createQuiz(SPECIES, {
       mode,
-      seed: mode === 'daily' ? hashString(`defi-${today}`) : randomSeed(),
+      seed: mode === 'daily' ? hashString(`defi-${today}`) : mode === 'challenge' ? challengeSeed : randomSeed(),
       difficulty,
       group: mode === 'quick' || mode === 'silhouettes' || mode === 'survival' ? group : undefined,
       speciesId: target?.id,
       focusIds,
-      hidden: hideSpiders ? isArachnid : undefined,
+      // Un défi doit être identique pour les deux joueurs : jamais d’araignées, quel que soit le réglage.
+      hidden: hideSpiders || mode === 'challenge' ? isArachnid : undefined,
     });
     setQuiz(q);
     setPhase('play');
@@ -300,6 +317,32 @@ export default function QuizSessionScreen() {
                 </Txt>
               </View>
             )}
+            {mode === 'challenge' && received && (
+              <View style={[styles.bestRow, { backgroundColor: alpha(info.color, 0.12), borderColor: alpha(info.color, 0.45) }]}>
+                <Icon icon={mci('sword-cross')} size={20} color={info.color} />
+                <Txt variant="smallStrong" style={styles.flex}>
+                  Score à battre : {scoreLabel(received.score)} · {pointsLabel(received.score)}
+                </Txt>
+              </View>
+            )}
+            {mode === 'challenge' && !received && !challenge?.mine && (
+              <Txt variant="small" tone="secondary">
+                Jouez les 10 questions, puis envoyez votre code : vos amis joueront exactement les mêmes.
+              </Txt>
+            )}
+            {mode === 'challenge' && challenge?.mine && (
+              <View style={[styles.bestRow, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <Icon icon={mci('information-outline')} size={20} color={colors.textSecondary} />
+                <Txt variant="small" style={styles.flex}>
+                  Vous avez déjà joué ce défi ({scoreLabel(challenge.mine)}) : c’est ce premier score qui compte.
+                </Txt>
+              </View>
+            )}
+            {mode === 'challenge' && received && received.data !== DATA_VERSION && (
+              <Txt variant="small" tone="muted">
+                Votre ami n’a pas la même version de Faunapedia : quelques questions peuvent différer. Mettez l’appli à jour tous les deux pour un défi à armes égales.
+              </Txt>
+            )}
             {mode === 'quick' && (
               <View style={styles.option}>
                 <Txt variant="label" tone="muted">
@@ -375,9 +418,17 @@ export default function QuizSessionScreen() {
             points={points}
             reward={reward}
             practice={practiceRun}
+            replayLabel={mode === 'challenge' ? 'Nouveau défi' : undefined}
+            hideShare={mode === 'challenge'}
+            extra={challenge?.mine ? <ChallengeCard record={{ ...challenge, mine: challenge.mine }} /> : undefined}
             onReplay={() => {
               reset();
               setQuestion(null);
+              if (mode === 'challenge') {
+                // Nouvelle graine, sans adversaire : un défi neuf à envoyer.
+                setReceived(null);
+                setChallengeSeed(newChallengeSeed(Math.random));
+              }
               setPhase('intro');
             }}
           />

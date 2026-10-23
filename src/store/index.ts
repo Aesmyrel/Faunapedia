@@ -63,6 +63,20 @@ export interface QuizResult {
   answers: AnswerRecord[];
 }
 
+export interface ChallengeEntry {
+  correct: number;
+  points: number;
+}
+
+/** Un défi entre amis : votre score et ceux des autres joueurs (un code reçu = un adversaire). */
+export interface ChallengeRecord {
+  seed: number;
+  /** Date du premier passage. */
+  at: number;
+  mine?: ChallengeEntry;
+  rivals: (ChallengeEntry & { code: string })[];
+}
+
 export interface QuizReward {
   xp: number;
   levelBefore: number;
@@ -83,6 +97,7 @@ interface PersistedState {
   badges: Record<string, number>;
   counters: Counters;
   settings: Settings;
+  challenges: ChallengeRecord[];
 }
 
 interface AppState extends PersistedState {
@@ -93,6 +108,8 @@ interface AppState extends PersistedState {
   finishQuiz: (result: QuizResult) => QuizReward;
   bump: (counter: keyof Counters) => void;
   updateSettings: (patch: Partial<Settings>) => void;
+  /** Complète le défi de cette graine : votre premier score compte, chaque code reçu ajoute un adversaire. */
+  recordChallenge: (seed: number, patch: { mine?: ChallengeEntry; rival?: ChallengeEntry & { code: string } }) => void;
   shiftCelebration: () => void;
   resetProgress: () => void;
 }
@@ -119,6 +136,7 @@ const INITIAL: PersistedState = {
   badges: {},
   counters: { taxa: 0, compares: 0, nearby: 0, night: 0 },
   settings: { haptics: true, sounds: true, theme: 'system', onboarded: false },
+  challenges: [],
 };
 
 /** XP gagnée pour chaque nouvelle espèce découverte. */
@@ -170,6 +188,20 @@ export const useStore = create<AppState>()(
       },
 
       updateSettings: (patch) => set((s) => ({ settings: { ...s.settings, ...patch } })),
+
+      recordChallenge: (seed, patch) =>
+        set((s) => {
+          const prev = s.challenges.find((c) => c.seed === seed);
+          const rivals = prev?.rivals ?? [];
+          const rival = patch.rival;
+          const next: ChallengeRecord = {
+            seed,
+            at: prev?.at ?? Date.now(),
+            mine: prev?.mine ?? patch.mine,
+            rivals: rival && !rivals.some((r) => r.code === rival.code) ? [...rivals, rival] : rivals,
+          };
+          return { challenges: [next, ...s.challenges.filter((c) => c.seed !== seed)].slice(0, 50) };
+        }),
 
       shiftCelebration: () => set((s) => ({ celebrations: s.celebrations.slice(1) })),
 
@@ -264,6 +296,7 @@ export const useStore = create<AppState>()(
         badges: s.badges,
         counters: s.counters,
         settings: s.settings,
+        challenges: s.challenges,
       }),
     },
   ),

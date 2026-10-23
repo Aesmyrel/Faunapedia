@@ -9,9 +9,9 @@ import { Section } from '@/components/ui/section';
 import { StackScreen } from '@/components/ui/stack-screen';
 import { Tap } from '@/components/ui/tap';
 import { Txt } from '@/components/ui/text';
+import { BUILD_ID } from '@/constants/release';
 import { Radius } from '@/constants/theme';
 import { SPECIES } from '@/data';
-import { BUILD_ID } from '@/hooks/use-app-update';
 import { useTheme } from '@/hooks/use-theme';
 
 const SOURCES = [

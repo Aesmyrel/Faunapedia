@@ -925,7 +925,12 @@ export interface QuizConfig {
   speciesId?: string;
   /** Espèces prioritaires (révision). */
   focusIds?: string[];
+  /** Espèces dont les images sont masquées (mode arachnophobie) : jamais montrées, ni comme leurres. */
+  hidden?: (s: Species) => boolean;
 }
+
+/** Types de questions qui montrent une photo ou une silhouette de l’espèce. */
+const VISUAL_KINDS = new Set<QuestionKind>(['photo-to-name', 'name-to-photo', 'silhouette', 'clues', 'compare']);
 
 export interface Quiz {
   info: ModeInfo;
@@ -938,10 +943,14 @@ export function createQuiz(all: Species[], config: QuizConfig): Quiz {
   const rng = createRng(config.seed);
   let counter = 0;
   const uid = () => `${config.mode}-${config.seed}-${counter++}`;
-  const base = config.group ? all.filter((s) => s.group === config.group) : all;
+  const isHidden = config.hidden ?? (() => false);
+  const visible = all.filter((s) => !isHidden(s));
+  const base = config.group ? visible.filter((s) => s.group === config.group) : visible;
   const used = new Set<string>();
-  const focus = (config.focusIds ?? []).map((id) => all.find((s) => s.id === id)).filter(Boolean) as Species[];
+  const focus = (config.focusIds ?? []).map((id) => visible.find((s) => s.id === id)).filter(Boolean) as Species[];
   const target = config.speciesId ? all.find((s) => s.id === config.speciesId) : undefined;
+  // « Me tester » sur une espèce masquée : seulement des questions sans image.
+  const textOnlyTarget = target !== undefined && isHidden(target);
   const usedKinds = new Map<QuestionKind, number>();
 
   const difficultyAt = (index: number, streak: number): Difficulty => {
@@ -984,7 +993,7 @@ export function createQuiz(all: Species[], config: QuizConfig): Quiz {
       case 'timed':
         return fromMix(MIXES.timed);
       case 'species':
-        return index === 0 ? 'photo-to-name' : fromMix(MIXES.species);
+        return index === 0 && !textOnlyTarget ? 'photo-to-name' : fromMix(MIXES.species);
       case 'review':
         return fromMix({ 'photo-to-name': 3, fact: 2, 'name-to-photo': 1, 'from-sci': 1, record: 1 });
       default:
@@ -1014,9 +1023,10 @@ export function createQuiz(all: Species[], config: QuizConfig): Quiz {
       const difficulty = difficultyAt(index, streak);
       for (let attempt = 0; attempt < 40; attempt++) {
         const kind = kindFor(index);
+        if (textOnlyTarget && VISUAL_KINDS.has(kind)) continue;
         const s = target ?? pickSpecies(speciesFilter(kind));
         if (!s) continue;
-        const ctx: GenContext = { rng, pool: all, difficulty, uid };
+        const ctx: GenContext = { rng, pool: visible, difficulty, uid };
         const q = GENERATORS[kind](ctx, s);
         if (q) {
           used.add(s.id);

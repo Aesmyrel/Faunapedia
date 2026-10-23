@@ -7,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { CollectionCard } from '@/components/home/collection-card';
 import { GroupTile } from '@/components/home/group-tile';
 import { UpdateBanner } from '@/components/home/update-banner';
+import { SpiderQuestion } from '@/components/spider-question';
 import { ShareAppCard } from '@/components/share/share-app-card';
 import { SpeciesCard } from '@/components/species/species-card';
 import { Carousel } from '@/components/ui/carousel';
@@ -23,6 +24,7 @@ import { useHaptics } from '@/hooks/use-haptics';
 import { useShake } from '@/hooks/use-shake';
 import { useTheme } from '@/hooks/use-theme';
 import { capitalize, todayKey } from '@/lib/format';
+import { isArachnid } from '@/lib/phobia';
 import { levelFromXp } from '@/lib/progress';
 import { createRng, shuffle } from '@/lib/random';
 import { activeStreak, useStore } from '@/store';
@@ -42,7 +44,11 @@ export default function DiscoverScreen() {
   const h = useHaptics();
   const today = todayKey();
   const now = new Date();
-  const featured = useMemo(() => speciesOfTheDay(today), [today]);
+  const hideSpiders = useStore((s) => s.settings.hideSpiders);
+  const updateSettings = useStore((s) => s.updateSettings);
+  // Tant que la question n’a pas reçu de « non », l’espèce du jour n’est jamais une araignée.
+  const spareSpiders = hideSpiders !== false;
+  const featured = useMemo(() => speciesOfTheDay(today, spareSpiders ? isArachnid : undefined), [today, spareSpiders]);
   const xp = useStore((s) => s.xp);
   const daily = useStore((s) => s.daily);
   const seen = useStore((s) => s.seen);
@@ -54,13 +60,15 @@ export default function DiscoverScreen() {
 
   const toDiscover = useMemo(() => {
     const rng = createRng(hashString(`decouvrir-${today}`));
-    return shuffle(rng, SPECIES.filter((s) => s.photos.length && !seen[s.id] && s.id !== featured.id)).slice(0, 10);
-  }, [today, seen, featured.id]);
+    const pool = SPECIES.filter((s) => s.photos.length && !seen[s.id] && s.id !== featured.id && !(hideSpiders && isArachnid(s)));
+    return shuffle(rng, pool).slice(0, 10);
+  }, [today, seen, featured.id, hideSpiders]);
 
   const surprise = () => {
     h.heavy();
-    const pool = SPECIES.filter((s) => !seen[s.id]);
-    const list = pool.length ? pool : SPECIES;
+    const allowed = hideSpiders ? SPECIES.filter((s) => !isArachnid(s)) : SPECIES;
+    const pool = allowed.filter((s) => !seen[s.id]);
+    const list = pool.length ? pool : allowed;
     router.push(`/species/${list[Math.floor(Math.random() * list.length)].id}`);
   };
   // L’accéléromètre n’écoute que lorsque l’accueil est affiché.
@@ -93,6 +101,12 @@ export default function DiscoverScreen() {
       </View>
 
       <UpdateBanner />
+
+      {hideSpiders === undefined && (
+        <View style={styles.spiderQuestion}>
+          <SpiderQuestion onChange={(hide) => updateSettings({ hideSpiders: hide })} />
+        </View>
+      )}
 
       <Animated.View entering={FadeInDown.duration(500)} style={styles.block}>
         <Txt variant="label" tone="accent" style={styles.eyebrow}>
@@ -254,5 +268,6 @@ const styles = StyleSheet.create({
   field: { padding: 16, gap: 8, borderRadius: Radius.xl, borderWidth: 1, overflow: 'hidden' },
   fieldIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   share: { paddingHorizontal: Gutter, marginTop: 36 },
+  spiderQuestion: { paddingHorizontal: Gutter, marginBottom: 20 },
   footer: { paddingHorizontal: 32, marginTop: 28, marginBottom: 8, lineHeight: 17 },
 });

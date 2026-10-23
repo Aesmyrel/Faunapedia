@@ -9,6 +9,8 @@ import { SPECIES } from '@/data';
 import { useTheme } from '@/hooks/use-theme';
 import { useStore } from '@/store';
 
+import { SpiderQuestion } from './spider-question';
+
 import { Icon, mci } from './ui/icon';
 import { Tap } from './ui/tap';
 import { Txt } from './ui/text';
@@ -39,6 +41,7 @@ export function Welcome() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const updateSettings = useStore((s) => s.updateSettings);
+  const hideSpiders = useStore((s) => s.settings.hideSpiders);
   return (
     <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}>
       <LinearGradient colors={[alpha('#E8B04B', 0.18), alpha('#E8B04B', 0)]} style={styles.glow} />
@@ -70,7 +73,10 @@ export function Welcome() {
             </Animated.View>
           ))}
         </View>
-        <Animated.View entering={FadeInUp.delay(700).duration(500)} style={styles.footer}>
+        <Animated.View entering={FadeInDown.delay(620).duration(500)}>
+          <SpiderQuestion value={hideSpiders} onChange={(hide) => updateSettings({ hideSpiders: hide })} />
+        </Animated.View>
+        <Animated.View entering={FadeInUp.delay(760).duration(500)} style={styles.footer}>
           <Tap onPress={() => updateSettings({ onboarded: true })} style={[styles.cta, { backgroundColor: colors.accent }]} haptic="select">
             <Txt variant="subtitle" color={colors.onAccent}>
               Commencer l’exploration

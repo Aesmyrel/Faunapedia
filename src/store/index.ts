@@ -19,6 +19,8 @@ export interface Settings {
   theme: ThemePreference;
   /** L’écran de bienvenue a-t-il déjà été vu ? */
   onboarded: boolean;
+  /** Mode arachnophobie (absent tant que la question n’a pas été posée). */
+  hideSpiders?: boolean;
 }
 
 export interface QuizStats {

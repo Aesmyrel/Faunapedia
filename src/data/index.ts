@@ -105,7 +105,7 @@ export function hashString(text: string): number {
 }
 
 /** Espèce du jour : identique pour tout le monde à une date donnée. */
-export function speciesOfTheDay(dateKey: string): Species {
-  const pool = SPECIES.filter((s) => s.photos.length > 0);
+export function speciesOfTheDay(dateKey: string, exclude?: (s: Species) => boolean): Species {
+  const pool = SPECIES.filter((s) => s.photos.length > 0 && !exclude?.(s));
   return pool[hashString(`espece-${dateKey}`) % pool.length];
 }

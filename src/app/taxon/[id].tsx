@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
+import { CutePlaceholder } from '@/components/species/cute-placeholder';
 import { DistributionMap } from '@/components/species/distribution-map';
 import { SoundSection } from '@/components/species/sound-player';
 import { WikiReader } from '@/components/species/wiki-reader';
@@ -22,10 +23,12 @@ import { alpha, Gutter, MaxContentWidth, Radius } from '@/constants/theme';
 import { getSpeciesByInatId } from '@/data';
 import { IUCN, RANKS } from '@/data/reference';
 import type { IucnStatus } from '@/data/types';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
 import { useRemote } from '@/hooks/use-remote';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchJson, getChildren, getTaxon, getWikiSummary, type INatTaxon, inatPhoto, inatTaxonUrl } from '@/lib/api';
 import { capitalize, formatCompact, formatCredit } from '@/lib/format';
+import { hidesArachnidPhoto } from '@/lib/phobia';
 import { useStore } from '@/store';
 
 type ChildSort = 'popular' | 'alpha' | 'diverse';
@@ -39,6 +42,7 @@ export default function TaxonScreen() {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
   const bump = useStore((s) => s.bump);
+  const hideSpiders = useHideSpiders();
   const [sort, setSort] = useState<ChildSort>('popular');
 
   const taxon = useRemote(`taxon-${taxonId}`, () => getTaxon(taxonId));
@@ -101,11 +105,12 @@ export default function TaxonScreen() {
 
   const ancestors = (t.ancestors ?? []).filter((a) => a.rank !== 'stateofmatter');
   const title = t.preferred_common_name ? capitalize(t.preferred_common_name) : t.name;
-  const photo = inatPhoto(t.default_photo, 'large');
+  const masked = hideSpiders && hidesArachnidPhoto(t);
+  const photo = masked ? undefined : inatPhoto(t.default_photo, 'large');
   const cs = t.conservation_status;
   const status = cs && !cs.place && /iucn/i.test(cs.authority ?? '') && cs.iucn ? IUCN_BY_NUMBER[cs.iucn] : undefined;
   const gbifKey = gbif.data?.matchType && gbif.data.matchType !== 'NONE' ? (gbif.data.acceptedUsageKey ?? gbif.data.usageKey) : undefined;
-  const photos = (t.taxon_photos ?? []).filter((p) => p.photo.license_code).slice(0, 8);
+  const photos = masked ? [] : (t.taxon_photos ?? []).filter((p) => p.photo.license_code).slice(0, 8);
   const contentW = Math.min(width, MaxContentWidth);
 
   return (
@@ -125,6 +130,11 @@ export default function TaxonScreen() {
       </ScrollView>
 
       <Animated.View entering={FadeIn} style={styles.pad}>
+        {masked && (
+          <View style={[styles.banner, { width: contentW - Gutter * 2 }]}>
+            <CutePlaceholder seed={String(t.id)} label style={StyleSheet.absoluteFill} />
+          </View>
+        )}
         {photo && (
           <View style={[styles.banner, { width: contentW - Gutter * 2 }]}>
             <Image source={{ uri: photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={250} />

@@ -5,14 +5,23 @@ import Svg, { Path } from 'react-native-svg';
 import { alpha, Radius } from '@/constants/theme';
 import { GROUPS } from '@/data/reference';
 import type { Species } from '@/data/types';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
+import { isArachnid } from '@/lib/phobia';
 import { type AnimalBox, stretchedBodyPath } from '@/lib/scale';
 
 import { Icon } from '../ui/icon';
+import { CutePlaceholder } from './cute-placeholder';
 
 /** Silhouette d’une espèce à l’échelle, dans une emprise de `box.width × box.height` multipliée par `scale`. */
 export function AnimalFigure({ species, box, scale, color }: { species: Species; box: AnimalBox; scale: number; color: string }) {
   const w = box.width * scale;
   const h = box.height * scale;
+  const hidden = useHideSpiders() && isArachnid(species);
+
+  if (hidden) {
+    const side = Math.max(24, Math.min(w, h));
+    return <CutePlaceholder seed={species.id} style={{ width: side, height: side, borderRadius: side / 2 }} />;
+  }
 
   if (box.stretched) {
     return (

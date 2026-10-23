@@ -5,9 +5,13 @@ import { StyleSheet, View } from 'react-native';
 import { Radius } from '@/constants/theme';
 import { getSpeciesByInatId } from '@/data';
 import { RANKS } from '@/data/reference';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
 import { useTheme } from '@/hooks/use-theme';
 import { type INatTaxon, inatPhoto } from '@/lib/api';
 import { capitalize, formatCompact } from '@/lib/format';
+import { hidesArachnidPhoto } from '@/lib/phobia';
+
+import { CutePlaceholder } from '../species/cute-placeholder';
 
 import { Icon, mci } from '../ui/icon';
 import { Tap } from '../ui/tap';
@@ -18,6 +22,7 @@ export function TaxonRow({ taxon, meta, onPress }: { taxon: INatTaxon; meta?: st
   const router = useRouter();
   const { colors } = useTheme();
   const curated = taxon.rank === 'species' ? getSpeciesByInatId(taxon.id) : undefined;
+  const hidden = useHideSpiders() && hidesArachnidPhoto(taxon);
   const photo = inatPhoto(taxon.default_photo, 'small');
   const title = taxon.preferred_common_name ? capitalize(taxon.preferred_common_name) : taxon.name;
   const open =
@@ -39,7 +44,9 @@ export function TaxonRow({ taxon, meta, onPress }: { taxon: INatTaxon; meta?: st
   return (
     <Tap onPress={open} scaleTo={0.985} style={[styles.row, { borderBottomColor: colors.border }]} accessibilityLabel={title}>
       <View style={[styles.thumb, { backgroundColor: colors.surfaceRaised }]}>
-        {photo ? (
+        {hidden ? (
+          <CutePlaceholder seed={String(taxon.id)} style={StyleSheet.absoluteFill} />
+        ) : photo ? (
           <Image source={{ uri: photo }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} recyclingKey={String(taxon.id)} />
         ) : (
           <Icon icon={mci('paw')} size={22} color={colors.textMuted} />

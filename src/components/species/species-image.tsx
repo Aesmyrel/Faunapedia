@@ -6,8 +6,11 @@ import { alpha } from '@/constants/theme';
 import { photoUrl, type PhotoSize } from '@/data';
 import { GROUPS } from '@/data/reference';
 import type { Species } from '@/data/types';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
+import { isArachnid } from '@/lib/phobia';
 
 import { Icon } from '../ui/icon';
+import { CutePlaceholder } from './cute-placeholder';
 
 export interface SpeciesImageProps {
   species: Species;
@@ -24,8 +27,10 @@ export interface SpeciesImageProps {
  * groupe sur un dégradé) quand aucune photo libre n’existe.
  */
 export function SpeciesImage({ species, size = 'medium', index = 0, style, imageStyle, blurRadius, priority }: SpeciesImageProps) {
+  const hidden = useHideSpiders() && isArachnid(species);
   const uri = photoUrl(species.photos[index] ?? species.photos[0], size);
   const color = GROUPS[species.group].color;
+  if (hidden) return <CutePlaceholder seed={species.id} label={size === 'large'} style={[styles.fill, style]} />;
   if (uri) {
     return (
       <View style={[styles.fill, style]}>

@@ -7,8 +7,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { photoUrl } from '@/data';
 import type { Species } from '@/data/types';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
 import { useTheme } from '@/hooks/use-theme';
 import { formatCredit } from '@/lib/format';
+import { isArachnid } from '@/lib/phobia';
 
 import { IconButton } from '../ui/icon-button';
 import { mci } from '../ui/icon';
@@ -28,7 +30,8 @@ export function PhotoHero({ species, height, scrollY }: PhotoHeroProps) {
   const { colors } = useTheme();
   const [index, setIndex] = useState(0);
   const [viewer, setViewer] = useState(false);
-  const photos = species.photos;
+  const hidden = useHideSpiders() && isArachnid(species);
+  const photos = hidden ? [] : species.photos;
   const count = Math.max(1, photos.length);
 
   const parallax = useAnimatedStyle(() => {

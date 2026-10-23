@@ -5,6 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { alpha, Radius } from '@/constants/theme';
 import { SPECIES } from '@/data';
 import type { Collection } from '@/data/reference';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
+import { isArachnid } from '@/lib/phobia';
 
 import { SpeciesImage } from '../species/species-image';
 import { Icon } from '../ui/icon';
@@ -15,7 +17,8 @@ import { Txt } from '../ui/text';
 export function CollectionCard({ collection: c, width = 260 }: { collection: Collection; width?: number }) {
   const router = useRouter();
   const members = SPECIES.filter(c.filter);
-  const cover = members.find((s) => s.photos.length) ?? members[0];
+  const hideSpiders = useHideSpiders();
+  const cover = members.find((s) => s.photos.length && !(hideSpiders && isArachnid(s))) ?? members[0];
   return (
     <Tap onPress={() => router.push(`/collection/${c.id}`)} style={[styles.card, { width }]} accessibilityLabel={c.title}>
       {cover && <SpeciesImage species={cover} style={StyleSheet.absoluteFill} />}

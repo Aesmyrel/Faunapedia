@@ -20,8 +20,10 @@ import { getSpecies, hashString, SPECIES } from '@/data';
 import { GROUP_ORDER, GROUPS } from '@/data/reference';
 import type { GroupId } from '@/data/types';
 import { useHaptics } from '@/hooks/use-haptics';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
 import { useTheme } from '@/hooks/use-theme';
 import { capitalize, todayKey } from '@/lib/format';
+import { isArachnid } from '@/lib/phobia';
 import { dueReviews } from '@/lib/progress';
 import {
   createQuiz,
@@ -52,6 +54,7 @@ export default function QuizSessionScreen() {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const h = useHaptics();
+  const hideSpiders = useHideSpiders();
   const today = todayKey();
 
   const daily = useStore((s) => s.daily);
@@ -147,6 +150,7 @@ export default function QuizSessionScreen() {
       group: mode === 'quick' || mode === 'silhouettes' || mode === 'survival' ? group : undefined,
       speciesId: target?.id,
       focusIds,
+      hidden: hideSpiders ? isArachnid : undefined,
     });
     setQuiz(q);
     setPhase('play');

@@ -2,6 +2,7 @@ import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-ico
 import type { StyleProp, TextStyle } from 'react-native';
 
 import type { IconRef } from '@/data/reference';
+import { useHideSpiders } from '@/hooks/use-hide-spiders';
 
 export interface IconProps {
   icon: IconRef;
@@ -11,7 +12,18 @@ export interface IconProps {
 }
 
 /** Icône vectorielle issue de l’une des trois familles utilisées par l’app. */
-export function Icon({ icon, size = 20, color, style }: IconProps) {
+export function Icon(props: IconProps) {
+  // L’icône des arachnides est une araignée : remplacée en mode arachnophobie.
+  if (props.icon.set === 'fa6' && props.icon.name === 'spider') return <ArachnidIcon {...props} />;
+  return <Glyph {...props} />;
+}
+
+function ArachnidIcon(props: IconProps) {
+  const hidden = useHideSpiders();
+  return <Glyph {...props} icon={hidden ? mci('eye-off-outline') : props.icon} />;
+}
+
+function Glyph({ icon, size = 20, color, style }: IconProps) {
   switch (icon.set) {
     case 'fa6':
       return (

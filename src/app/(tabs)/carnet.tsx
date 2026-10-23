@@ -176,6 +176,12 @@ export default function NotebookScreen() {
             onChange={(haptics) => state.updateSettings({ haptics })}
           />
           <SettingRow
+            label="Masquer les araignées"
+            hint="Mode arachnophobie : photos et silhouettes d’araignées et autres arachnides remplacées par des images toutes douces."
+            value={state.settings.hideSpiders === true}
+            onChange={(hideSpiders) => state.updateSettings({ hideSpiders })}
+          />
+          <SettingRow
             label="Charger les sons automatiquement"
             hint="Sur les fiches d’oiseaux et d’espèces vocales. Désactivez pour économiser vos données."
             value={state.settings.sounds}

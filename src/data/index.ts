@@ -3,6 +3,7 @@
  * enrichies, et expose quelques sélecteurs.
  */
 import { curatedSpecies } from './curated';
+import { LORE } from './curated/lore';
 import enrichmentJson from './generated/enrichment.json';
 import { GROUP_ORDER } from './reference';
 import type { GroupId, Photo, Species, TaxonNode } from './types';
@@ -25,6 +26,7 @@ export const SPECIES: Species[] = curatedSpecies.map((c) => {
     statusSource: e.statusSource === 'iucn' ? 'iucn' : 'curated',
     photos: e.photos ?? [],
     taxonomy: e.taxonomy ?? [],
+    lore: LORE[c.id],
   };
 });
 

@@ -141,6 +141,13 @@ export interface CuratedSpecies {
   wiki?: string;
 }
 
+/** Récit historique, mythe ou symbole associé à une espèce. */
+export interface Lore {
+  /** Culture ou époque d’origine (« Égypte ancienne », « Mythologie nordique »…). */
+  culture: string;
+  text: string;
+}
+
 export interface Photo {
   url: string;
   /** Dimensions d'origine (pour le ratio). */
@@ -179,6 +186,8 @@ export interface Species extends CuratedSpecies {
   taxonomy: TaxonNode[];
   silhouette?: Silhouette;
   observations?: number;
+  /** Histoire, mythes et symboles (src/data/curated/lore.ts). */
+  lore?: readonly Lore[];
   /** Source du statut : 'iucn' (iNaturalist/UICN), 'wikidata' ou 'curated'. */
   statusSource?: 'iucn' | 'wikidata' | 'curated';
 }

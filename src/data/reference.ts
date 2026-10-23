@@ -321,6 +321,16 @@ const tag = (t: Tag) => (s: Species) => s.tags?.includes(t) ?? false;
 
 export const COLLECTIONS: Collection[] = [
   {
+    id: 'legendes',
+    title: 'Mythes et légendes',
+    subtitle: 'Dieux, monstres et symboles',
+    description:
+      'Des dieux égyptiens aux sagas nordiques, des bestiaires médiévaux au cinéma : les animaux qui ont marqué l’histoire et l’imaginaire des hommes.',
+    icon: { set: 'mci', name: 'pillar' },
+    color: '#C9A227',
+    filter: (s) => Boolean(s.lore?.length),
+  },
+  {
     id: 'records',
     title: 'Records du vivant',
     subtitle: 'Les plus grands, rapides, lourds…',

@@ -41,6 +41,7 @@ export type QuestionKind =
   | 'true-false'
   | 'record'
   | 'fact'
+  | 'lore'
   | 'region'
   | 'diet'
   | 'sound'
@@ -228,6 +229,20 @@ export function maskName(text: string, s: Species): string {
 }
 
 const isMasked = (original: string, masked: string) => masked !== original;
+
+/** Adjectifs trop courants pour trahir une espèce (contrairement aux noms de lieux). */
+const GENERIC_WORDS = new Set(['grand', 'grande', 'petit', 'petite', 'commun', 'commune', 'geant', 'geante', 'blanc', 'blanche', 'rouge', 'royal']);
+
+/**
+ * Débuts de mots du nom qui, retrouvés dans un texte masqué, trahiraient la
+ * réponse : dérivés (« lionne », « galápago ») ou lieux (« Japon »).
+ */
+export function nameStems(s: Species): string[] {
+  return normalize(s.name)
+    .split(' ')
+    .filter((w, i) => (i === 0 ? w.length >= 4 : w.length >= 5 && !GENERIC_WORDS.has(w)))
+    .map((w) => w.slice(0, 5));
+}
 
 /** Noms dont le premier mot est féminin (« la panthère des neiges », « l’hyène »…). */
 const FEMININE_HEADS = new Set([
@@ -611,6 +626,29 @@ const genRecord: Generator = ({ rng, pool, difficulty, uid }, s) => {
   };
 };
 
+/** « De quel animal parle cette légende ? » — récits d’histoire et de mythologie. */
+const genLore: Generator = ({ rng, pool, difficulty, uid }, s) => {
+  const stems = nameStems(s);
+  const stories = (s.lore ?? [])
+    .map((l) => ({ l, m: maskName(`${l.culture} — ${l.text}`, s) }))
+    .filter(({ m }) => !stems.some((stem) => normalize(m).includes(stem)));
+  if (!stories.length) return null;
+  const { l, m } = pick(rng, stories);
+  return {
+    id: uid(),
+    kind: 'lore',
+    category: 'Mythes & histoire',
+    prompt: 'De quel animal parle-t-on ?',
+    subject: { text: m, quote: true },
+    layout: 'list',
+    choices: shuffle(rng, [s, ...pickDistractors(rng, s, pool, 3, difficulty, (o) => sameGender(s)(o))]).map(choiceFor),
+    answerId: s.id,
+    explanation: `C’est ${withArticle(s)}. ${l.text}`,
+    learnIds: [s.id],
+    difficulty,
+  };
+};
+
 const genFact: Generator = ({ rng, pool, difficulty, uid }, s) => {
   const facts = s.facts.map((f) => ({ f, m: maskName(f, s) })).filter(({ f, m }) => !isMasked(f, m) || m.split('…').length <= 3);
   if (!facts.length) return null;
@@ -886,6 +924,7 @@ export const GENERATORS: Record<Exclude<QuestionKind, never>, Generator> = {
   'true-false': genTrueFalse,
   record: genRecord,
   fact: genFact,
+  lore: genLore,
   region: genRegion,
   diet: genDiet,
   sound: genSound,
@@ -903,6 +942,7 @@ const MIXES: Record<'standard' | 'expert' | 'timed' | 'species', Mix> = {
     fact: 2,
     compare: 2,
     record: 1.5,
+    lore: 1.2,
     'true-false': 1.5,
     status: 1,
     silhouette: 1,
@@ -914,7 +954,7 @@ const MIXES: Record<'standard' | 'expert' | 'timed' | 'species', Mix> = {
   },
   expert: { 'sci-name': 3, 'from-sci': 2, order: 2.5, family: 2.5, status: 1.5, record: 1, fact: 1, 'photo-to-name': 1.5 },
   timed: { 'photo-to-name': 4, 'true-false': 2, compare: 2, silhouette: 1 },
-  species: { 'photo-to-name': 1, fact: 1, status: 1, compare: 1, region: 1, diet: 1, 'from-sci': 1, record: 1, 'true-false': 1 },
+  species: { 'photo-to-name': 1, fact: 1, lore: 1.5, status: 1, compare: 1, region: 1, diet: 1, 'from-sci': 1, record: 1, 'true-false': 1 },
 };
 
 export interface QuizConfig {
@@ -1009,6 +1049,8 @@ export function createQuiz(all: Species[], config: QuizConfig): Quiz {
         return s.group === 'birds' || SOUND_IDS.has(s.id);
       case 'record':
         return Boolean(s.record);
+      case 'lore':
+        return Boolean(s.lore?.length);
       case 'compare':
         return hasPhoto(s) && Boolean(s.stats.weight || s.stats.length || s.stats.lifespan || s.stats.speed);
       default:

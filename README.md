@@ -19,6 +19,7 @@
 - **Carte de répartition mondiale** (GBIF) limitée aux observations de terrain, pour ne pas confondre aire naturelle et zoos ou musées.
 - **Écouter** : enregistrements sonores de terrain (chants, cris, coassements) issus d’iNaturalist.
 - **Espèces apparentées** calculées à partir de la classification.
+- **Histoire & mythologie** : plus de 120 récits pour 90 espèces emblématiques — dieux égyptiens, sagas nordiques, bestiaires médiévaux, littérature et cinéma —, chacun avec sa culture d’origine.
 
 ### 🌳 L’arbre du vivant, en entier
 - Navigation **en direct** dans plus d’un million d’espèces animales (iNaturalist), de l’embranchement à l’espèce, avec fil d’Ariane, nombre d’espèces et d’observations, résumé Wikipédia.
@@ -50,8 +51,9 @@ Plus de quinze types de questions (identification par photo, photo à retrouver,
 ### 🧭 Et aussi
 - **Comparateur** : parenté (dernier ancêtre commun), échelle commune, mensurations face à face.
 - **Autour de moi** : les espèces réellement observées près de vous… ou en voyage virtuel (Camargue, Serengeti, Galápagos, Bornéo…).
-- **16 collections thématiques** : records, abysses, faune de France (outre-mer compris), venimeux et vénéneux, camouflage, fossiles vivants, migrateurs, espèces disparues…
+- **17 collections thématiques**, dont « Mythes et légendes » : records, abysses, faune de France (outre-mer compris), venimeux et vénéneux, camouflage, fossiles vivants, migrateurs, espèces disparues…
 - **Surprends-moi** : secouez le téléphone pour découvrir une espèce au hasard.
+- **Mode arachnophobie** : proposé dès le premier lancement et réglable dans le Carnet, il remplace photos et silhouettes d’araignées (et autres arachnides) par des images toutes douces, et les écarte des quiz.
 - **Partager l’application** : un QR code à faire scanner et un lien à envoyer, depuis l’accueil, le carnet ou « À propos ».
 - Thème sombre (pensé pour les écrans OLED) et clair, retours haptiques, onglets natifs **Liquid Glass** sur iOS 26.
 

@@ -199,6 +199,24 @@ export default function SpeciesScreen() {
           </View>
         </Section>
 
+        {s.lore && s.lore.length > 0 && (
+          <Section title="Histoire & mythologie" eyebrow="Mythes, symboles et récits">
+            <View style={styles.facts}>
+              {s.lore.map((l) => (
+                <View key={l.text} style={[styles.lore, { backgroundColor: colors.surface, borderColor: colors.border, borderLeftColor: color }]}>
+                  <View style={styles.loreHead}>
+                    <Icon icon={mci('pillar')} size={16} color={color} />
+                    <Txt variant="label" color={color}>
+                      {l.culture}
+                    </Txt>
+                  </View>
+                  <Txt variant="body">{l.text}</Txt>
+                </View>
+              ))}
+            </View>
+          </Section>
+        )}
+
         {s.gbifKey && (
           <Section title="Répartition" eyebrow="Observations mondiales">
             <DistributionMap taxonKey={s.gbifKey} name={s.name} historical={s.status === 'EX'} />
@@ -388,6 +406,8 @@ const styles = StyleSheet.create({
   chipsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   facts: { gap: 10 },
   fact: { flexDirection: 'row', gap: 14, padding: 16, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, alignItems: 'flex-start' },
+  lore: { gap: 8, padding: 16, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth, borderLeftWidth: 3 },
+  loreHead: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   factNum: { fontSize: 22, lineHeight: 26, minWidth: 30 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 30, width: '100%', maxWidth: MaxContentWidth, alignSelf: 'center' },
   action: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: Radius.lg, borderWidth: 1 },

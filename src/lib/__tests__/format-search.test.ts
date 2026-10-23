@@ -1,6 +1,6 @@
 import { SPECIES } from '@/data';
 
-import { formatLength, formatLifespan, formatNumber, formatWeight, frTypo, normalize } from '../format';
+import { formatCredit, formatLength, formatLifespan, formatNumber, formatWeight, frTypo, normalize } from '../format';
 import { createSearch, editDistance } from '../search';
 
 const search = createSearch(SPECIES);
@@ -26,6 +26,14 @@ describe('format', () => {
   it('applique la typographie française', () => {
     expect(frTypo('Vrai ou faux ?')).toBe(`Vrai ou faux${NNBSP}?`);
     expect(frTypo("L'Aigle royal est une espèce d'oiseaux.")).toBe('L’Aigle royal est une espèce d’oiseaux.');
+  });
+
+  it('traduit les crédits photo en français', () => {
+    expect(formatCredit('(c) Brian Gratwicke, some rights reserved (CC BY), uploaded by Brian Gratwicke')).toBe('© Brian Gratwicke · CC BY');
+    expect(formatCredit('(c) seasav, some rights reserved (CC BY-NC-ND)', 'CC BY-NC-ND')).toBe('© seasav · CC BY-NC-ND');
+    expect(formatCredit('no rights reserved, uploaded by Abhas Misraraj')).toBe('Abhas Misraraj · domaine public');
+    expect(formatCredit('(c) Jo, all rights reserved')).toBe('© Jo');
+    expect(formatCredit('© Boštjan Burger (Wikimedia Commons)', 'Public domain')).toBe('© Boštjan Burger (Wikimedia Commons) · domaine public');
   });
 
   it('normalise accents et apostrophes', () => {

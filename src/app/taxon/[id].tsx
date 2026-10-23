@@ -25,7 +25,7 @@ import type { IucnStatus } from '@/data/types';
 import { useRemote } from '@/hooks/use-remote';
 import { useTheme } from '@/hooks/use-theme';
 import { fetchJson, getChildren, getTaxon, getWikiSummary, type INatTaxon, inatPhoto, inatTaxonUrl } from '@/lib/api';
-import { capitalize, formatCompact } from '@/lib/format';
+import { capitalize, formatCompact, formatCredit } from '@/lib/format';
 import { useStore } from '@/store';
 
 type ChildSort = 'popular' | 'alpha' | 'diverse';
@@ -131,7 +131,7 @@ export default function TaxonScreen() {
             <LinearGradient colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.6)']} style={StyleSheet.absoluteFill} />
             {t.default_photo?.attribution && (
               <Txt variant="caption" color="rgba(255,255,255,0.75)" style={styles.credit} numberOfLines={1}>
-                {t.default_photo.attribution}
+                {formatCredit(t.default_photo.attribution)}
               </Txt>
             )}
           </View>

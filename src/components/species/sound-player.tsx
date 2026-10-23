@@ -6,6 +6,7 @@ import { alpha, Radius } from '@/constants/theme';
 import { useRemote } from '@/hooks/use-remote';
 import { useTheme } from '@/hooks/use-theme';
 import { getSounds, type SoundClip } from '@/lib/api';
+import { formatCredit } from '@/lib/format';
 
 import { Icon, mci } from '../ui/icon';
 import { ProgressBar } from '../ui/progress-ring';
@@ -63,7 +64,7 @@ export function ClipPlayer({
         <ProgressBar progress={progress} color={color} height={4} />
         <Txt variant="caption" tone="muted" numberOfLines={1}>
           {clip.place && !hidePlace ? `${clip.place} · ` : ''}
-          {clip.attribution.replace(/, some rights reserved.*$/, '').replace(/^\(c\)\s*/, '© ')} · {clip.license}
+          {formatCredit(clip.attribution, clip.license)}
         </Txt>
       </View>
     </View>

@@ -36,7 +36,7 @@ import { ACTIVITIES, COLLECTIONS, DIETS, GROUPS, HABITATS, type IconRef, IUCN, R
 import { useHaptics } from '@/hooks/use-haptics';
 import { useTheme } from '@/hooks/use-theme';
 import { gbifSpeciesUrl, inatTaxonUrl, wikiPageUrl } from '@/lib/api';
-import { formatCompact } from '@/lib/format';
+import { formatCompact, formatCredit } from '@/lib/format';
 import { SOUND_IDS } from '@/lib/quiz';
 import { useStore } from '@/store';
 
@@ -101,7 +101,7 @@ export default function SpeciesScreen() {
               <Chip label={group.singular} icon={group.icon} color={color} selected size="sm" onPress={() => router.push(`/group/${s.group}`)} />
               <StatusBadge status={s.status} label small />
             </View>
-            <Txt variant="hero">{s.name}</Txt>
+            <Txt variant={s.name.length > 20 ? 'display' : 'hero'}>{s.name}</Txt>
             <Txt variant="sci" tone="secondary" style={styles.sci}>
               {s.sci}
               {s.authority ? <Txt variant="small" tone="muted">{`  ${s.authority}`}</Txt> : null}
@@ -267,7 +267,7 @@ export default function SpeciesScreen() {
             {s.wikiTitle && <SourceLink label={`Wikipédia · « ${s.wikiTitle} »`} url={wikiPageUrl(s.wikiTitle)} />}
             {s.photos.map((p, i) => (
               <Txt key={p.url} variant="caption" tone="muted">
-                Photo {i + 1} : {p.attribution}
+                Photo {i + 1} : {formatCredit(p.attribution, p.license)}
               </Txt>
             ))}
             {s.silhouette && (
@@ -282,8 +282,8 @@ export default function SpeciesScreen() {
 
       <Animated.View pointerEvents="none" style={[styles.bar, { paddingTop: insets.top, height: insets.top + 56 }, barStyle]}>
         <Glass style={StyleSheet.absoluteFill} />
-        <View style={[styles.barTitle, { maxWidth: contentW - 180 }]}>
-          <Txt variant="subtitle" numberOfLines={1}>
+        <View style={[styles.barTitle, { maxWidth: contentW - 230 }]}>
+          <Txt variant="subtitle" numberOfLines={1} style={{ maxWidth: contentW - 230 }}>
             {s.name}
           </Txt>
         </View>

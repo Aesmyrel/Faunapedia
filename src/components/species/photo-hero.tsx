@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { photoUrl } from '@/data';
 import type { Species } from '@/data/types';
 import { useTheme } from '@/hooks/use-theme';
+import { formatCredit } from '@/lib/format';
 
 import { IconButton } from '../ui/icon-button';
 import { mci } from '../ui/icon';
@@ -117,7 +118,7 @@ function PhotoViewer({ species, visible, initial, onClose }: { species: Species;
         {photo && (
           <View style={[styles.viewerCaption, { paddingBottom: insets.bottom + 16 }]}>
             <Txt variant="caption" color="rgba(255,255,255,0.8)" numberOfLines={2}>
-              {photo.attribution}
+              {formatCredit(photo.attribution, photo.license)}
             </Txt>
           </View>
         )}

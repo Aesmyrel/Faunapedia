@@ -134,6 +134,35 @@ export function normalize(text: string): string {
     .trim();
 }
 
+const LICENSE_FR: Record<string, string> = { 'public domain': 'domaine public', cc0: 'domaine public (CC0)' };
+
+/**
+ * Crédit photo ou sonore en français : « (c) Ana, some rights reserved (CC BY-NC),
+ * uploaded by Ana » devient « © Ana · CC BY-NC ». La licence fournie à part est
+ * ajoutée si le texte ne la mentionne pas.
+ */
+export function formatCredit(attribution: string, license?: string): string {
+  const text = attribution.trim();
+  const licenseFr = (l: string) => LICENSE_FR[l.toLowerCase()] ?? l;
+  let credit = text;
+  let named: string | undefined;
+  const free = /^no rights reserved(?:,\s*uploaded by\s+(.+))?$/i.exec(text);
+  const own = /^\(c\)\s*(.+?),\s*(?:some|all) rights reserved(?:\s*\(([^)]+)\))?(?:,\s*uploaded by\s+.+)?$/i.exec(text);
+  if (free) {
+    credit = free[1] ? `${free[1]} · domaine public` : 'Domaine public';
+    named = 'domaine public';
+  } else if (own) {
+    credit = own[2] ? `© ${own[1]} · ${own[2]}` : `© ${own[1]}`;
+    named = own[2];
+  } else {
+    credit = text.replace(/^\(c\)\s*/i, '© ');
+  }
+  if (!license) return credit;
+  const l = licenseFr(license);
+  const mentioned = [named, credit].some((x) => x?.toLowerCase().includes(l.toLowerCase()) || x?.toLowerCase().includes(license.toLowerCase()));
+  return mentioned ? credit : `${credit} · ${l}`;
+}
+
 /** Majuscule initiale (les noms iNaturalist sont parfois en minuscules). */
 export function capitalize(text: string): string {
   return text ? text.charAt(0).toLocaleUpperCase('fr-FR') + text.slice(1) : text;

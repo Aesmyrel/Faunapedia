@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Modal, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInUp, SlideInDown } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, FadeInDown, FadeInUp, SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ChoiceBinary, ChoicePhoto, ChoiceRow, type ChoiceState } from '@/components/quiz/choice-button';
@@ -490,7 +490,7 @@ export default function QuizSessionScreen() {
 
       {answered && !info.timeLimitSec && (
         <Animated.View
-          entering={SlideInDown.springify().damping(18)}
+          entering={SlideInDown.duration(300).easing(Easing.out(Easing.cubic))}
           style={[
             styles.feedback,
             {

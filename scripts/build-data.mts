@@ -282,31 +282,88 @@ interface PhyloImage {
   };
 }
 
+interface PhyloNode {
+  _links?: { cladeImages?: { href: string } };
+  _embedded?: { primaryImage?: PhyloImage };
+}
+
 let phyloBuild: number | undefined;
 
-async function phylopic(sci: string, keys: (number | undefined)[]): Promise<Silhouette | undefined> {
+const mid = (r?: readonly [number, number]) => (r ? (r[0] + r[1]) / 2 : 0);
+
+/** Espèces dont la silhouette la plus allongée est trompeuse (une tête seule) : on garde la principale. */
+const KEEP_PRIMARY_SILHOUETTE = new Set(['crocodile-du-nil']);
+
+/**
+ * Note d’une silhouette pour la comparaison d’échelle (plus basse = meilleure).
+ * Oiseaux : perchés ou debout plutôt qu’en vol. Mammifères : de profil, aux
+ * proportions longueur / hauteur de l’espèce. Reptiles et poissons : de profil
+ * (la vue la plus allongée) plutôt que vus de dessus. Amphibiens : la silhouette
+ * principale, la plus allongée étant souvent un têtard.
+ */
+function poseScore(ratio: number, s: CuratedSpecies): number | null {
+  const log = (x: number) => Math.abs(Math.log(x));
+  if (KEEP_PRIMARY_SILHOUETTE.has(s.id)) return null;
+  if (s.group === 'birds') return log(ratio / 0.75);
+  if (s.group === 'mammals') {
+    const len = mid(s.stats.length);
+    const tall = mid(s.stats.height);
+    if (len && tall) return log(ratio / Math.min(4, Math.max(0.8, len / tall)));
+    // Sans hauteur, la vue la plus allongée est le profil ; sans longueur (girafe), on garde la silhouette principale.
+    return len ? -Math.min(ratio, 4) : null;
+  }
+  if (s.group === 'reptiles' || s.group === 'fishes') return -ratio;
+  return null;
+}
+
+function rasterOf(img: PhyloImage) {
+  const rasters = img._links.rasterFiles ?? [];
+  const raster = rasters.find((r) => r.sizes.startsWith('512x')) ?? rasters[rasters.length - 1];
+  if (!raster) return undefined;
+  const [w, h] = raster.sizes.split('x').map(Number);
+  return { href: raster.href, ratio: w / h };
+}
+
+async function phylopic(s: CuratedSpecies, keys: (number | undefined)[]): Promise<Silhouette | undefined> {
   if (phyloBuild === undefined) {
     const root = await getJson<{ build: number }>('https://api.phylopic.org/');
     phyloBuild = root?.build ?? 0;
   }
   const ids = keys.filter((k): k is number => typeof k === 'number');
   if (!ids.length) return undefined;
-  const res = await getJson<{ _embedded?: { primaryImage?: PhyloImage } }>(
+  const res = await getJson<PhyloNode>(
     `https://api.phylopic.org/resolve/gbif.org/species?build=${phyloBuild}&embed_primaryImage=true&objectIDs=${ids.join(',')}`,
     { allow404: true },
   );
-  const img = res?._embedded?.primaryImage;
-  const rasters = img?._links.rasterFiles ?? [];
-  const raster = rasters.find((r) => r.sizes.startsWith('512x')) ?? rasters[rasters.length - 1];
-  if (!img || !raster) return undefined;
-  const [w, h] = raster.sizes.split('x').map(Number);
-  const title = img._links.specificNode?.title ?? '';
+  const primary = res?._embedded?.primaryImage;
+  if (!primary) return undefined;
+  const isExact = (img: PhyloImage) => (img._links.specificNode?.title ?? '').toLowerCase().startsWith(s.sci.toLowerCase());
+
+  // Toutes les silhouettes de l’espèce, pour choisir la pose la plus parlante.
+  let img = primary;
+  const clade = res?._links?.cladeImages?.href;
+  if (isExact(primary) && clade) {
+    const list = await getJson<{ _embedded?: { items?: PhyloImage[] } }>(`https://api.phylopic.org${clade}&embed_items=true&page=0`);
+    const candidates = (list?._embedded?.items ?? []).filter((c) => isExact(c) && rasterOf(c));
+    let best = poseScore(rasterOf(primary)?.ratio ?? 1, s);
+    for (const c of candidates) {
+      const score = poseScore(rasterOf(c)!.ratio, s);
+      // La silhouette principale garde l’avantage à quasi-égalité.
+      if (score !== null && best !== null && score < best - 0.1) {
+        best = score;
+        img = c;
+      }
+    }
+  }
+
+  const raster = rasterOf(img);
+  if (!raster) return undefined;
   return {
     url: raster.href,
-    ratio: Math.round((w / h) * 1000) / 1000,
+    ratio: Math.round(raster.ratio * 1000) / 1000,
     attribution: img._links.contributor?.title,
     license: licenseName(img._links.license?.href),
-    exact: title.toLowerCase().startsWith(sci.toLowerCase()),
+    exact: isExact(img),
   };
 }
 
@@ -397,7 +454,7 @@ async function main() {
     const t = details.get(inatIds.get(s.id) ?? -1);
     const g = await gbifMatch(s.sci);
     const gbifKey = g?.matchType && g.matchType !== 'NONE' ? (g.acceptedUsageKey ?? g.usageKey) : undefined;
-    const silhouette = gbifKey ? await phylopic(s.sci, [gbifKey, g?.genusKey, g?.familyKey, g?.orderKey]) : undefined;
+    const silhouette = gbifKey ? await phylopic(s, [gbifKey, g?.genusKey, g?.familyKey, g?.orderKey]) : undefined;
     const page = wiki.get(s.id);
 
     const photos: Photo[] = [];

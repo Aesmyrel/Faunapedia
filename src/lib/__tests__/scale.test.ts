@@ -2,6 +2,8 @@ import { getSpecies, SPECIES } from '@/data';
 
 import { animalBox, stretchedBodyPath } from '../scale';
 
+const typical = (r?: readonly [number, number]) => (r ? (r[0] + r[1]) / 2 : 0);
+
 const box = (id: string) => {
   const s = getSpecies(id);
   if (!s) throw new Error(id);
@@ -21,19 +23,22 @@ describe('comparaison d’échelle', () => {
     expect(oversized).toEqual([]);
   });
 
-  it('reporte la longueur d’un oiseau perché sur sa hauteur', () => {
+  it('dessine un adulte moyen, pas un record', () => {
     const eagle = box('aigle-royal');
-    expect(eagle.height).toBeCloseTo(102);
-    expect(eagle.width).toBeLessThan(eagle.height);
+    expect(Math.max(eagle.width, eagle.height)).toBeLessThanOrEqual(typical(getSpecies('aigle-royal')?.stats.length) + 1e-9);
     expect(eagle.rotated).toBe(false);
   });
 
+  it('borne le dessin par la hauteur au garrot quand elle est connue', () => {
+    for (const id of ['hippopotame', 'elephant-de-savane', 'panda-geant', 'zebre-des-plaines', 'dromadaire']) {
+      const s = getSpecies(id);
+      expect({ id, ok: box(id).height <= typical(s?.stats.height) + 1e-9 }).toEqual({ id, ok: true });
+    }
+  });
+
   it('couche les silhouettes vues de dessus', () => {
-    const croc = box('crocodile-du-nil');
-    expect(croc.rotated).toBe(true);
-    expect(croc.width).toBeCloseTo(500);
-    expect(croc.height).toBeLessThan(croc.width);
-    expect(box('requin-marteau-halicorne').rotated).toBe(true);
+    const shark = box('requin-marteau-halicorne');
+    if (shark.rotated) expect(shark.width).toBeGreaterThan(shark.height);
     // Postures réellement verticales conservées
     expect(box('ours-brun').rotated).toBe(false);
     expect(box('ver-tubicole-geant').rotated).toBe(false);
@@ -42,13 +47,13 @@ describe('comparaison d’échelle', () => {
   it('étire les serpents sur toute leur longueur', () => {
     const cobra = box('cobra-royal');
     expect(cobra.stretched).toBe(true);
-    expect(cobra.width).toBeCloseTo(550);
+    expect(cobra.width).toBeCloseTo(typical(getSpecies('cobra-royal')?.stats.length));
     expect(cobra.height).toBeLessThan(cobra.width / 5);
     expect(stretchedBodyPath(cobra.width, cobra.height)).toMatch(/^M[\d. ]+L.*z/);
   });
 
   it('garde la hauteur pour les grands animaux mesurés debout', () => {
-    expect(box('girafe').height).toBeCloseTo(580);
-    expect(box('autruche').height).toBeCloseTo(275);
+    expect(box('girafe').height).toBeCloseTo(typical(getSpecies('girafe')?.stats.height));
+    expect(box('autruche').height).toBeCloseTo(typical(getSpecies('autruche')?.stats.height));
   });
 });

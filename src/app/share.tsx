@@ -39,7 +39,7 @@ export default function ShareScreen() {
       />
 
       {APP_URL && (
-        <Animated.View entering={ZoomIn.springify().damping(16)} style={styles.center}>
+        <Animated.View entering={ZoomIn.springify().mass(1).stiffness(200).damping(18)} style={styles.center}>
           <View style={[styles.qrCard, { borderColor: colors.border }]}>
             <QrCode value={APP_URL} size={qrSize} />
             <View style={styles.qrText}>

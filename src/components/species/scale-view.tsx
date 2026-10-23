@@ -69,7 +69,7 @@ export function ScaleView({ species, height = 200 }: { species: Species; height?
         </Txt>
         <Txt variant="caption" color={color} align="right" style={styles.flex}>
           {species.name} · {box.basis}
-          {box.stretched ? ', étiré' : box.rotated ? ', vu de dessus' : ''}
+          {box.stretched ? ', étiré' : box.topView ? ', vu de dessus' : ''}
         </Txt>
       </View>
       {species.silhouette && !species.silhouette.exact && !box.stretched && (

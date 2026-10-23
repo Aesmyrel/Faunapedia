@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
+import Animated, { Easing, FadeInUp, FadeOutUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { alpha, Radius } from '@/constants/theme';
@@ -53,7 +53,7 @@ export function CelebrationHost() {
     <View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { paddingTop: insets.top + 8 }]}>
       <Animated.View
         key={current.type === 'badge' ? current.id : `lvl-${current.level}`}
-        entering={FadeInUp.springify().damping(16)}
+        entering={FadeInUp.duration(320).easing(Easing.out(Easing.cubic))}
         exiting={FadeOutUp.duration(200)}
         style={styles.wrap}>
         <Tap onPress={shift} accessibilityLabel={title}>

@@ -46,5 +46,6 @@ Docs: https://docs.expo.dev/eas/index.md
 - Les fiches rédigées vivent dans `src/data/curated/` ; les données enrichies (`src/data/generated/enrichment.json`) sont produites par `npm run data:build` et ne doivent pas être éditées à la main.
 - La logique pure (quiz, recherche, progression, formats) est dans `src/lib/` et couverte par des tests Jest : la garder sans dépendance à React Native.
 - **React Compiler est actif** : ne pas utiliser d’assertion non nulle (`x!.prop`) dans une closure passée à un hook — le compilateur lit ses dépendances pendant le rendu. Extraire la valeur avant (`const name = t?.name ?? ''`). Pas de `Math.random()` / `Date.now()` pendant le rendu (seulement dans les gestionnaires d’événements).
+- **Reanimated 4** : ses ressorts par défaut ont une masse de 4 et une raideur de 900 ; ne jamais régler `damping` seul (`withSpring(x, { damping: 8 })`, `.springify().damping(14)`), l’animation oscillerait plusieurs secondes. Préciser `mass`, `stiffness` et `damping`, ou utiliser une durée avec `Easing`.
 - Les écrans d’onglets utilisent `TabScreen` (encarts gérés par les onglets natifs sur iOS) ; les écrans empilés utilisent `StackScreen`.
 - Avant de livrer : `npm run typecheck`, `npm run lint`, `npm test`.

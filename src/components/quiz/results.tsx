@@ -76,7 +76,7 @@ export function QuizResults({
   return (
     <View style={styles.wrap}>
       {celebrate && <Confetti />}
-      <Animated.View entering={ZoomIn.springify().damping(14)} style={styles.center}>
+      <Animated.View entering={ZoomIn.springify().mass(1).stiffness(200).damping(18)} style={styles.center}>
         <ProgressRing size={170} stroke={12} progress={endless ? Math.min(1, correct / 20) : ratio} color={info.color}>
           <Txt variant="hero">{endless ? correct : `${correct}/${total}`}</Txt>
           <Txt variant="caption" tone="muted">

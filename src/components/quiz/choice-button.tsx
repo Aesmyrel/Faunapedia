@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming } from 'react-native-reanimated';
+import Animated, { Easing, FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withSequence, withTiming } from 'react-native-reanimated';
 
 import { alpha, Radius } from '@/constants/theme';
 import { getSpecies } from '@/data';
@@ -21,9 +21,18 @@ function useFeedbackAnimation(state: ChoiceState) {
   const pop = useSharedValue(1);
   useEffect(() => {
     if (state === 'wrong') {
-      shake.set(withSequence(withTiming(-8, { duration: 50 }), withTiming(8, { duration: 70 }), withTiming(-5, { duration: 60 }), withTiming(0, { duration: 50 })));
+      shake.set(
+        withSequence(withTiming(-8, { duration: 50 }), withTiming(8, { duration: 70 }), withTiming(-5, { duration: 60 }), withTiming(0, { duration: 50 })),
+      );
     }
-    if (state === 'correct') pop.set(withSequence(withSpring(1.04, { damping: 8 }), withSpring(1)));
+    if (state === 'correct') {
+      pop.set(
+        withSequence(
+          withTiming(1.035, { duration: 120, easing: Easing.out(Easing.quad) }),
+          withTiming(1, { duration: 200, easing: Easing.inOut(Easing.quad) }),
+        ),
+      );
+    }
   }, [state, shake, pop]);
   return useAnimatedStyle(() => ({ transform: [{ translateX: shake.get() }, { scale: pop.get() }] }));
 }
@@ -54,36 +63,40 @@ export function ChoiceRow({
   const anim = useFeedbackAnimation(state);
   const c = stateColors(state, colors);
   return (
-    <Animated.View style={[anim, state === 'dimmed' && styles.dimmed]}>
-      <Tap
-        onPress={onPress}
-        disabled={disabled}
-        haptic={false}
-        style={[styles.row, { backgroundColor: c.bg, borderColor: c.border }]}
-        accessibilityLabel={choice.label}
-        accessibilityState={{ disabled, selected: state === 'correct' || state === 'wrong' }}>
-        <View style={[styles.letter, { backgroundColor: choice.color ? alpha(choice.color, 0.25) : colors.surfaceRaised }]}>
-          {state === 'correct' ? (
-            <Icon icon={mci('check-bold')} size={16} color={colors.success} />
-          ) : state === 'wrong' ? (
-            <Icon icon={mci('close-thick')} size={16} color={colors.danger} />
-          ) : (
-            <Txt variant="smallStrong" color={choice.color ?? colors.textSecondary}>
-              {LETTERS[index]}
+    <Animated.View layout={LinearTransition.duration(220)}>
+      <Animated.View style={[anim, state === 'dimmed' && styles.dimmed]}>
+        <Tap
+          onPress={onPress}
+          disabled={disabled}
+          haptic={false}
+          style={[styles.row, { backgroundColor: c.bg, borderColor: c.border }]}
+          accessibilityLabel={choice.label}
+          accessibilityState={{ disabled, selected: state === 'correct' || state === 'wrong' }}>
+          <View style={[styles.letter, { backgroundColor: choice.color ? alpha(choice.color, 0.25) : colors.surfaceRaised }]}>
+            {state === 'correct' ? (
+              <Icon icon={mci('check-bold')} size={16} color={colors.success} />
+            ) : state === 'wrong' ? (
+              <Icon icon={mci('close-thick')} size={16} color={colors.danger} />
+            ) : (
+              <Txt variant="smallStrong" color={choice.color ?? colors.textSecondary}>
+                {LETTERS[index]}
+              </Txt>
+            )}
+          </View>
+          <View style={styles.flex}>
+            <Txt variant={choice.italic ? 'sci' : 'subtitle'} style={choice.italic && styles.italicLabel}>
+              {choice.label}
             </Txt>
-          )}
-        </View>
-        <View style={styles.flex}>
-          <Txt variant={choice.italic ? 'sci' : 'subtitle'} style={choice.italic && styles.italicLabel}>
-            {choice.label}
-          </Txt>
-          {revealSub && choice.sublabel && (
-            <Txt variant="caption" tone="muted">
-              {choice.sublabel}
-            </Txt>
-          )}
-        </View>
-      </Tap>
+            {revealSub && choice.sublabel && (
+              <Animated.View entering={FadeIn.duration(220)}>
+                <Txt variant="caption" tone="muted">
+                  {choice.sublabel}
+                </Txt>
+              </Animated.View>
+            )}
+          </View>
+        </Tap>
+      </Animated.View>
     </Animated.View>
   );
 }

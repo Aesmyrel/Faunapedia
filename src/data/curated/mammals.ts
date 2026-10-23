@@ -256,7 +256,7 @@ const entries: Entry[] = [
     activity: 'cathemeral',
     social: 'solitaire',
     habitats: ['banquise', 'ocean'],
-    regions: ['arctique'],
+    regions: ['arctique', 'amerique-nord', 'europe', 'asie'],
     record: 'Plus grand carnivore terrestre actuel',
     facts: [
       'Sous sa fourrure, sa peau est noire ; ses poils, eux, sont translucides et creux.',
@@ -942,7 +942,7 @@ const entries: Entry[] = [
     activity: 'cathemeral',
     social: 'groupe',
     habitats: ['ocean', 'banquise'],
-    regions: ['arctique'],
+    regions: ['arctique', 'amerique-nord', 'europe', 'asie'],
     facts: [
       'Sa « corne » est une dent : une canine qui peut dépasser 2,5 m et traverse sa lèvre en spirale.',
       'Cette défense, parcourue de terminaisons nerveuses, pourrait servir d’organe sensoriel.',
@@ -959,7 +959,7 @@ const entries: Entry[] = [
     activity: 'cathemeral',
     social: 'groupe',
     habitats: ['ocean', 'banquise'],
-    regions: ['arctique'],
+    regions: ['arctique', 'amerique-nord', 'europe', 'asie'],
     facts: [
       'On le surnomme « canari des mers » pour la richesse de ses vocalisations.',
       'Ses vertèbres cervicales ne sont pas soudées : contrairement à la plupart des cétacés, il peut tourner la tête.',
@@ -1013,7 +1013,7 @@ const entries: Entry[] = [
     activity: 'cathemeral',
     social: 'groupe',
     habitats: ['banquise', 'littoral'],
-    regions: ['arctique'],
+    regions: ['arctique', 'amerique-nord', 'europe', 'asie'],
     facts: [
       'Ses défenses, présentes chez les deux sexes, l’aident à se hisser sur la glace.',
       'Il aspire les bivalves hors de leur coquille par succion.',
@@ -1352,7 +1352,7 @@ const entries: Entry[] = [
     record: 'Mammifère le plus léger : environ 1,8 g',
     facts: [
       'Son cœur peut battre plus de 1 500 fois par minute.',
-      'Elle doit manger chaque jour l’équivalent d’une à deux fois son poids.',
+      'Il doit manger chaque jour l’équivalent d’une à deux fois son poids.',
       'On la trouve en France, notamment sur le pourtour méditerranéen.',
     ],
     tags: ['record', 'minuscule', 'france'],

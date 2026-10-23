@@ -268,6 +268,7 @@ const entries: Entry[] = [
     id: 'phyllie',
     sci: 'Phyllium philippinicum',
     name: 'Phyllie des Philippines',
+    wiki: 'Phyllium',
     aka: ['Phasme-feuille'],
     status: 'NE',
     stats: { length: [6, 9] },
@@ -500,8 +501,8 @@ const entries: Entry[] = [
     habitats: ['prairie'],
     regions: ['europe'],
     facts: [
-      'Il projette sur ses agresseurs un jet brûlant, proche de 100 °C, issu d’une réaction chimique explosive dans son abdomen.',
-      'Il peut orienter ce jet dans presque toutes les directions.',
+      'Elle projette sur ses agresseurs un jet brûlant, proche de 100 °C, issu d’une réaction chimique explosive dans son abdomen.',
+      'Elle peut orienter ce jet dans presque toutes les directions.',
     ],
     tags: ['france'],
   },

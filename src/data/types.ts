@@ -84,7 +84,7 @@ export interface Stats {
   length?: Range;
   /** Hauteur (cm) — au garrot pour les quadrupèdes, debout pour les oiseaux. */
   height?: Range;
-  /** Envergure (cm) — oiseaux, chauves-souris, papillons. */
+  /** Envergure (cm) — oiseaux, chauves-souris, papillons ; pattes étendues pour les araignées et les crabes. */
   wingspan?: Range;
   /** Masse (kg). */
   weight?: Range;
@@ -137,6 +137,8 @@ export interface CuratedSpecies {
   tags?: Tag[];
   /** Origine du nom scientifique. */
   etymology?: string;
+  /** Article Wikipédia à utiliser quand ni le nom scientifique ni le nom français n’y mènent (genre…). */
+  wiki?: string;
 }
 
 export interface Photo {

@@ -222,6 +222,46 @@ async function fetchWikiPages(titles: string[]): Promise<Map<string, WikiPage>> 
   return out;
 }
 
+interface CommonsInfo {
+  query?: {
+    pages?: Record<
+      string,
+      {
+        imageinfo?: {
+          thumburl?: string;
+          thumbwidth?: number;
+          thumbheight?: number;
+          extmetadata?: Record<string, { value?: string }>;
+        }[];
+      }
+    >;
+  };
+}
+
+/** Photo de l’article Wikipédia (Wikimedia Commons), si sa licence est libre : dernier recours sans photo iNaturalist. */
+async function wikiPhoto(title: string): Promise<Photo | undefined> {
+  const page = await getJson<{ query?: { pages?: Record<string, { pageimage?: string }> } }>(
+    `https://fr.wikipedia.org/w/api.php?action=query&format=json&redirects=1&prop=pageimages&piprop=name&titles=${encodeURIComponent(title)}`,
+  );
+  const file = Object.values(page?.query?.pages ?? {})[0]?.pageimage;
+  if (!file) return undefined;
+  const info = await getJson<CommonsInfo>(
+    `https://fr.wikipedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=1200&titles=${encodeURIComponent(`Fichier:${file}`)}`,
+  );
+  const img = Object.values(info?.query?.pages ?? {})[0]?.imageinfo?.[0];
+  const meta = img?.extmetadata ?? {};
+  const license = meta.LicenseShortName?.value ?? '';
+  if (!img?.thumburl || !/^(CC|Public domain|Domaine public)/i.test(license)) return undefined;
+  const artist = (meta.Artist?.value ?? '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  return {
+    url: img.thumburl.split('?')[0],
+    w: img.thumbwidth,
+    h: img.thumbheight,
+    attribution: artist ? `© ${artist} (Wikimedia Commons)` : 'Wikimedia Commons',
+    license,
+  };
+}
+
 function cleanSummary(text: string | undefined): string | undefined {
   if (!text) return undefined;
   let s = text
@@ -444,7 +484,7 @@ async function main() {
       }
     }
   };
-  await lookup(targets.map((s) => [s.id, s.sci]));
+  await lookup(targets.map((s) => [s.id, s.wiki ?? s.sci]));
   await lookup(targets.filter((s) => !wiki.has(s.id)).map((s) => [s.id, s.name]));
 
   // 3. GBIF + PhyloPic
@@ -475,6 +515,11 @@ async function main() {
         if (photo) photos.push(photo);
         if (photos.length >= MAX_PHOTOS) break;
       }
+    }
+
+    if (!photos.length && page?.title) {
+      const fallback = await wikiPhoto(page.title);
+      if (fallback) photos.push(fallback);
     }
 
     const taxonomy: TaxonNode[] = [...(t?.ancestors ?? []), ...(t ? [t] : [])]

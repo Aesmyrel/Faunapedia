@@ -42,7 +42,8 @@ const typical = (r?: readonly [number, number]) => (r ? (r[0] + r[1]) / 2 : 0);
  *   un animal de profil, hauteur pour un oiseau perché ou un ours debout).
  * - Si la hauteur au garrot est connue, elle borne le dessin : selon la pose,
  *   la queue ou le cou faussent la longueur, rarement la hauteur.
- * - Oiseau ou chauve-souris en vol : l’envergure fait la largeur.
+ * - Oiseau ou chauve-souris en vol : l’envergure fait la largeur ; de même pour
+ *   les pattes étendues d’un crabe-araignée ou d’une mygale.
  * - Silhouette vue de dessus (crocodile, requin…) : couchée pour suivre la longueur.
  * - Serpents et anguilles : dessinés étirés.
  */
@@ -66,6 +67,10 @@ export function animalBox(s: Species): AnimalBox | null {
   const ratio = s.silhouette?.ratio ?? 1.6;
   const flier = s.group === 'birds' || s.taxonomy.some((t) => t.name === 'Chiroptera');
   if (span && flier && ratio >= 1.8) return box(span, span / ratio, `≈ ${formatLength(span)} d’envergure`);
+  // Crabe-araignée, mygale : la silhouette pattes étendues se mesure à l’envergure.
+  if (span && !flier && len && span > len * 2) {
+    return ratio >= 1 ? box(span, span / ratio, `≈ ${formatLength(span)} pattes étendues`) : box(span * ratio, span, `≈ ${formatLength(span)} pattes étendues`);
+  }
 
   if (len) {
     const lieFlat = ratio < 0.7 && len >= 30 && !UPRIGHT_GROUPS.includes(s.group) && !UPRIGHT_SPECIES.has(s.id);

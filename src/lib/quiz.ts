@@ -7,7 +7,7 @@
  */
 import { kinship, taxonAt } from '@/data';
 import { ACTIVITIES, DIETS, GROUPS, HABITATS, IUCN, REGIONS } from '@/data/reference';
-import type { Diet, GroupId, IucnStatus, Region, Species } from '@/data/types';
+import type { Diet, GroupId, IucnStatus, Range, Region, Species } from '@/data/types';
 
 import { capitalize, formatLength, formatLifespan, formatSpeed, formatWeight, normalize } from './format';
 import { createRng, pick, randInt, type Rng, sample, shuffle, weightedPick } from './random';
@@ -229,23 +229,34 @@ export function maskName(text: string, s: Species): string {
 
 const isMasked = (original: string, masked: string) => masked !== original;
 
-/** Noms dont le premier mot est féminin (« la panthère des neiges »…). */
+/** Noms dont le premier mot est féminin (« la panthère des neiges », « l’hyène »…). */
 const FEMININE_HEADS = new Set([
-  'abeille', 'anguille', 'autruche', 'bagheera', 'baleine', 'barge', 'baudroie', 'brachine', 'cecilie', 'chauve',
-  'cigale', 'cigogne', 'coccinelle', 'corbeille', 'crevette', 'girafe', 'grenouille', 'grue', 'guepe', 'harpie', 'huppe',
-  'lamproie', 'limule', 'mante', 'meduse', 'mesange', 'mygale', 'paedophryne', 'panthere', 'phyllie', 'physalie', 'pie',
-  'pieuvre', 'rainette', 'raie', 'rascasse', 'salamandre', 'sangsue', 'scolopendre', 'seiche', 'sterne', 'tique', 'tortue',
-  'vanesse', 'veuve', 'vipere',
+  'abeille', 'anemone', 'anguille', 'araignee', 'argyronete', 'autruche', 'bagheera', 'baleine', 'barge', 'baudroie',
+  'brachine', 'cecilie', 'chauve', 'cigale', 'cigogne', 'coccinelle', 'corbeille', 'crevette', 'effraie', 'elysie',
+  'epeire', 'etoile', 'fourmi', 'girafe', 'grenouille', 'grue', 'guepe', 'harpie', 'huppe', 'hydre', 'hyene', 'lamproie',
+  'limule', 'loutre', 'mante', 'meduse', 'mesange', 'mygale', 'orque', 'paedophryne', 'panthere', 'phyllie', 'physalie',
+  'pie', 'pieuvre', 'rainette', 'raie', 'rascasse', 'salamandre', 'sangsue', 'scolopendre', 'seiche', 'sterne', 'tique',
+  'tortue', 'vanesse', 'veuve', 'vipere',
 ]);
 
 /** Mots commençant par un h aspiré : pas d’élision (« le hérisson »). */
 const ASPIRATED_H = new Set(['harfang', 'harpie', 'herisson', 'homard', 'huppe', 'hibou']);
 
-export function article(s: Species): 'le' | 'la' | 'l’' {
-  const head = normalize(s.name).split(' ')[0];
-  if (/^[aeiouy]/.test(head) || (head.startsWith('h') && !ASPIRATED_H.has(head))) return 'l’';
-  return FEMININE_HEADS.has(head) ? 'la' : 'le';
+const headWord = (s: Species) => normalize(s.name).split(' ')[0];
+
+/** Genre grammatical du nom français (« elle » pour l’hyène, « il » pour l’aigle). */
+export function gender(s: Species): 'f' | 'm' {
+  return FEMININE_HEADS.has(headWord(s)) ? 'f' : 'm';
 }
+
+export function article(s: Species): 'le' | 'la' | 'l’' {
+  const head = headWord(s);
+  if (/^[aeiouy]/.test(head) || (head.startsWith('h') && !ASPIRATED_H.has(head))) return 'l’';
+  return gender(s) === 'f' ? 'la' : 'le';
+}
+
+/** Leurres du même genre : dans un texte masqué, « Elle » ou « décrite » ne doit pas trahir la réponse. */
+const sameGender = (s: Species) => (o: Species) => gender(o) === gender(s);
 
 /** « le Lion », « l’Axolotl », « la Salamandre tachetée ». */
 export function withArticle(s: Species, capital = false): string {
@@ -482,40 +493,46 @@ interface MetricInfo {
   /** Formulation neutre (sans accord) pour les affirmations « vrai ou faux ». */
   comparative: string;
   verb: string;
-  value: (s: Species) => number | undefined;
-  fmt: (v: number) => string;
+  /** Intervalle [min, max] de la mesure (une valeur unique s’écrit [v, v]). */
+  range: (s: Species) => Range | undefined;
+  fmt: (v: Range | number) => string;
 }
+
+/** Envergure (pattes, tentacules) très supérieure au corps : « le plus long » serait trompeur. */
+const spanDominates = (s: Species) => s.group !== 'birds' && (s.stats.wingspan?.[1] ?? 0) > (s.stats.length?.[1] ?? Infinity) * 2;
 
 const METRICS: Record<Metric, MetricInfo> = {
   weight: {
     prompt: 'Lequel est le plus lourd ?',
     comparative: 'pèse plus que',
-    verb: 'pèse jusqu’à',
-    value: (s) => s.stats.weight?.[1],
+    verb: 'pèse',
+    range: (s) => s.stats.weight,
     fmt: formatWeight,
   },
   length: {
     prompt: 'Lequel est le plus long ?',
     comparative: 'mesure plus que',
-    verb: 'mesure jusqu’à',
-    value: (s) => s.stats.length?.[1],
+    verb: 'mesure',
+    range: (s) => (spanDominates(s) ? undefined : s.stats.length),
     fmt: formatLength,
   },
   lifespan: {
     prompt: 'Lequel vit le plus longtemps ?',
     comparative: 'vit plus longtemps que',
-    verb: 'vit jusqu’à',
-    value: (s) => s.stats.lifespan?.[1],
+    verb: 'vit',
+    range: (s) => s.stats.lifespan,
     fmt: formatLifespan,
   },
   speed: {
     prompt: 'Lequel est le plus rapide ?',
     comparative: 'va plus vite que',
     verb: 'atteint',
-    value: (s) => s.stats.speed,
-    fmt: formatSpeed,
+    range: (s) => (s.stats.speed ? [s.stats.speed, s.stats.speed] : undefined),
+    fmt: (v) => formatSpeed(typeof v === 'number' ? v : v[1]),
   },
 };
+
+const typical = (r: Range) => (r[0] + r[1]) / 2;
 
 interface Duel {
   metric: MetricInfo;
@@ -524,28 +541,35 @@ interface Duel {
   explanation: string;
 }
 
-/** Trouve un adversaire pour `s` sur une mesure ; l’écart minimal dépend de la difficulté. */
+/**
+ * Trouve un adversaire pour `s` sur une mesure. On compare des adultes moyens
+ * (milieu de l’intervalle) et le gagnant doit dominer sur toute la fourchette :
+ * jamais de duel où un grand individu de l’un dépasserait un petit de l’autre
+ * dans le mauvais sens. L’écart minimal dépend de la difficulté.
+ */
 function pickDuel(ctx: GenContext, s: Species, forcedRatio?: number): Duel | null {
   const { rng, pool, difficulty } = ctx;
-  const metrics = (Object.keys(METRICS) as Metric[]).filter((m) => METRICS[m].value(s) !== undefined);
+  const metrics = (Object.keys(METRICS) as Metric[]).filter((m) => METRICS[m].range(s) !== undefined);
   if (!metrics.length) return null;
   const m = METRICS[pick(rng, metrics)];
-  const va = m.value(s) as number;
-  const minRatio = forcedRatio ?? (difficulty === 1 ? 2 : difficulty === 2 ? 1.35 : 1.12);
+  const ra = m.range(s) as Range;
+  const minRatio = forcedRatio ?? (difficulty === 1 ? 2 : difficulty === 2 ? 1.35 : 1.15);
   const maxRatio = difficulty === 1 ? Infinity : difficulty === 2 ? 20 : 4;
   const rivals = pool.filter((o) => {
-    const vb = m.value(o);
-    if (o.id === s.id || vb === undefined || !hasPhoto(o)) return false;
-    const r = Math.max(va, vb) / Math.min(va, vb);
-    return r >= minRatio && r <= maxRatio;
+    const rb = m.range(o);
+    if (o.id === s.id || rb === undefined || !hasPhoto(o)) return false;
+    const [big, small] = typical(ra) > typical(rb) ? [ra, rb] : [rb, ra];
+    const r = typical(big) / typical(small);
+    return r >= minRatio && r <= maxRatio && big[0] >= small[0] && big[1] > small[1];
   });
   if (!rivals.length) return null;
   const o = weightedPick(rng, rivals, (x) => (x.group === s.group ? 2 : 1));
-  const winner = va > (m.value(o) as number) ? s : o;
+  const rb = m.range(o) as Range;
+  const winner = typical(ra) > typical(rb) ? s : o;
   const loser = winner === s ? o : s;
   const explanation =
-    `${withArticle(winner, true)} ${m.verb} ${m.fmt(m.value(winner) as number)}, ` +
-    `contre ${m.fmt(m.value(loser) as number)} pour ${withArticle(loser)}.`;
+    `${withArticle(winner, true)} ${m.verb} ${m.fmt(m.range(winner) as Range)}, ` +
+    `contre ${m.fmt(m.range(loser) as Range)} pour ${withArticle(loser)}.`;
   return { metric: m, winner, loser, explanation };
 }
 
@@ -571,7 +595,7 @@ const genCompareQ: Generator = (ctx, s) => genCompare(ctx, s);
 const genRecord: Generator = ({ rng, pool, difficulty, uid }, s) => {
   if (!s.record) return null;
   const text = maskName(s.record, s);
-  const others = pickDistractors(rng, s, pool, 3, difficulty, (o) => Boolean(o.record) || difficulty === 1);
+  const others = pickDistractors(rng, s, pool, 3, difficulty, (o) => sameGender(s)(o) && (Boolean(o.record) || difficulty === 1));
   return {
     id: uid(),
     kind: 'record',
@@ -598,7 +622,7 @@ const genFact: Generator = ({ rng, pool, difficulty, uid }, s) => {
     prompt: 'De quel animal parle-t-on ?',
     subject: { text: m, quote: true },
     layout: 'list',
-    choices: shuffle(rng, [s, ...pickDistractors(rng, s, pool, 3, difficulty)]).map(choiceFor),
+    choices: shuffle(rng, [s, ...pickDistractors(rng, s, pool, 3, difficulty, sameGender(s))]).map(choiceFor),
     answerId: s.id,
     explanation: `C’est ${withArticle(s)}. ${funLine(s, f)}`,
     learnIds: [s.id],
@@ -608,9 +632,12 @@ const genFact: Generator = ({ rng, pool, difficulty, uid }, s) => {
 
 const CONTINENTS: Region[] = ['europe', 'afrique', 'asie', 'amerique-nord', 'amerique-sud', 'oceanie'];
 
+/** Espèces polaires ou océaniques : leurs limites continentales sont trop floues pour une question fermée. */
+const fuzzyRange = (s: Species) => s.regions.some((r) => r === 'arctique' || r === 'antarctique' || r === 'oceans');
+
 const genRegion: Generator = ({ rng, difficulty, uid }, s) => {
   const own = s.regions.filter((r) => CONTINENTS.includes(r));
-  if (!own.length || own.length > 3) return null;
+  if (!own.length || own.length > 3 || fuzzyRange(s)) return null;
   const answer = pick(rng, own);
   const wrong = sample(rng, CONTINENTS.filter((r) => !s.regions.includes(r)), 3);
   if (wrong.length < 3) return null;
@@ -631,10 +658,37 @@ const genRegion: Generator = ({ rng, difficulty, uid }, s) => {
 
 const DIET_POOL: Diet[] = ['carnivore', 'herbivore', 'insectivore', 'piscivore', 'omnivore', 'filtreur', 'frugivore', 'nectarivore', 'hematophage', 'charognard', 'myrmecophage'];
 
+/** Régimes qui se recoupent : un leurre de la même famille pourrait être juste lui aussi. */
+const DIET_FAMILY: Partial<Record<Diet, string>> = {
+  carnivore: 'animal',
+  piscivore: 'animal',
+  insectivore: 'animal',
+  myrmecophage: 'animal',
+  charognard: 'animal',
+  hematophage: 'animal',
+  parasite: 'animal',
+  herbivore: 'vegetal',
+  folivore: 'vegetal',
+  frugivore: 'vegetal',
+  granivore: 'vegetal',
+  nectarivore: 'vegetal',
+};
+
 const genDiet: Generator = ({ rng, difficulty, uid }, s) => {
   const answer = s.diet[0];
   if (!DIET_POOL.includes(answer) && answer !== 'folivore' && answer !== 'granivore') return null;
-  const wrong = sample(rng, DIET_POOL.filter((d) => !s.diet.includes(d) && !(answer === 'folivore' && d === 'herbivore')), 3);
+  const families = new Set(s.diet.map((d) => DIET_FAMILY[d]).filter(Boolean));
+  // Un omnivore mange de tout : seuls les régimes très spécialisés restent faux.
+  const wrongPool = DIET_POOL.filter((d) => {
+    if (s.diet.includes(d)) return false;
+    if (s.diet.includes('omnivore')) return d === 'filtreur' || d === 'hematophage' || d === 'myrmecophage' || d === 'nectarivore';
+    // Un filtreur avale du plancton animal : seuls les régimes végétaux sont franchement faux.
+    if (s.diet.includes('filtreur')) return DIET_FAMILY[d] === 'vegetal';
+    const family = DIET_FAMILY[d];
+    return !(family && families.has(family));
+  });
+  if (wrongPool.length < 3) return null;
+  const wrong = sample(rng, wrongPool, 3);
   return {
     id: uid(),
     kind: 'diet',
@@ -696,7 +750,7 @@ const genTrueFalse: Generator = (ctx, s) => {
     () => {
       const own = s.regions.filter((r) => CONTINENTS.includes(r));
       const absent = CONTINENTS.filter((c) => !s.regions.includes(c));
-      if (!own.length || !absent.length) return null;
+      if (!own.length || !absent.length || fuzzyRange(s)) return null;
       const r = truth ? pick(rng, own) : pick(rng, absent);
       return {
         statement: `On peut observer ${withArticle(s)} à l’état sauvage en ${REGIONS[r].label}.`,
@@ -785,7 +839,7 @@ const genClues: Generator = ({ rng, pool, uid }, s) => {
     prompt: 'Qui suis-je ?',
     media: { type: 'photo', speciesId: s.id, photoIndex: photoIndex(rng, s) },
     layout: 'list',
-    choices: shuffle(rng, [s, ...pickDistractors(rng, s, pool, 3, 2)]).map(choiceFor),
+    choices: shuffle(rng, [s, ...pickDistractors(rng, s, pool, 3, 2, sameGender(s))]).map(choiceFor),
     answerId: s.id,
     explanation: funLine(s),
     learnIds: [s.id],

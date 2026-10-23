@@ -5,6 +5,7 @@ import {
   article,
   buildClues,
   createQuiz,
+  gender,
   maskName,
   MODES,
   ofSpecies,
@@ -80,21 +81,57 @@ describe('quiz', () => {
     }
   });
 
-  it('les duels désignent bien l’espèce à la valeur la plus élevée', () => {
-    const quiz = createQuiz(SPECIES, { mode: 'duel', seed: 3 });
-    for (let i = 0; i < 30; i++) {
-      const q = quiz.next(i);
-      if (!q) continue;
-      const [a, b] = q.choices.map((c) => byId(c.id));
-      const metric = q.prompt.includes('lourd')
-        ? (s: typeof a) => s.stats.weight?.[1]
-        : q.prompt.includes('long ?')
-          ? (s: typeof a) => s.stats.length?.[1]
-          : q.prompt.includes('longtemps')
-            ? (s: typeof a) => s.stats.lifespan?.[1]
-            : (s: typeof a) => s.stats.speed;
-      const winner = (metric(a) ?? 0) > (metric(b) ?? 0) ? a : b;
-      expect(q.answerId).toBe(winner.id);
+  it('les duels sont sans appel : le gagnant domine sur toute la fourchette', () => {
+    for (const seed of [3, 11, 42, 97, 1234]) {
+      const quiz = createQuiz(SPECIES, { mode: 'duel', seed });
+      for (let i = 0; i < 30; i++) {
+        const q = quiz.next(i, i);
+        if (!q) continue;
+        const [a, b] = q.choices.map((c) => byId(c.id));
+        const range = (s: typeof a): readonly [number, number] | undefined =>
+          q.prompt.includes('lourd')
+            ? s.stats.weight
+            : q.prompt.includes('long ?')
+              ? s.stats.length
+              : q.prompt.includes('longtemps')
+                ? s.stats.lifespan
+                : s.stats.speed
+                  ? [s.stats.speed, s.stats.speed]
+                  : undefined;
+        const [winner, loser] = q.answerId === a.id ? [a, b] : [b, a];
+        const [w, l] = [range(winner), range(loser)];
+        expect(w && l).toBeTruthy();
+        expect({ q: q.explanation, ok: w![0] >= l![0] && w![1] > l![1] }).toEqual({ q: q.explanation, ok: true });
+      }
+    }
+  });
+
+  it('ne propose jamais un régime alimentaire qui serait juste lui aussi', () => {
+    const animal = ['carnivore', 'piscivore', 'insectivore', 'myrmecophage', 'charognard', 'hematophage', 'parasite'];
+    const vegetal = ['herbivore', 'folivore', 'frugivore', 'granivore', 'nectarivore'];
+    for (const s of SPECIES) {
+      const quiz = createQuiz([s, ...SPECIES.filter((o) => o.id !== s.id)], { mode: 'species', seed: 5, speciesId: s.id });
+      for (let i = 0; i < 5; i++) {
+        const q = quiz.next(i);
+        if (q?.kind !== 'diet') continue;
+        for (const c of q.choices.filter((c) => c.id !== q.answerId)) {
+          expect(s.diet).not.toContain(c.id);
+          const sameFamily = (fam: string[]) => fam.includes(c.id) && s.diet.some((d) => fam.includes(d));
+          expect({ id: s.id, leurre: c.id, ambigu: sameFamily(animal) || sameFamily(vegetal) }).toEqual({ id: s.id, leurre: c.id, ambigu: false });
+        }
+      }
+    }
+  });
+
+  it('les questions à texte ne trahissent pas la réponse par le genre des leurres', () => {
+    for (const mode of ['quick', 'whoami', 'expert'] as QuizMode[]) {
+      for (const seed of [1, 2, 3, 4, 5]) {
+        for (const q of playAll(mode, seed, 15)) {
+          if (q.kind !== 'fact' && q.kind !== 'record' && q.kind !== 'clues') continue;
+          const g = gender(byId(q.answerId));
+          expect(q.choices.every((c) => gender(byId(c.id)) === g)).toBe(true);
+        }
+      }
     }
   });
 
@@ -124,6 +161,19 @@ describe('textes', () => {
     expect(article(byId('panthere-des-neiges'))).toBe('la');
     expect(ofSpecies(byId('lion'))).toBe('du Lion');
     expect(ofSpecies(byId('orque'))).toBe('de l’Orque');
+    expect(withArticle(byId('loutre-de-mer'))).toBe('la Loutre de mer');
+    expect(withArticle(byId('fourmi-legionnaire'))).toBe('la Fourmi légionnaire');
+    expect(gender(byId('hyene-tachetee'))).toBe('f');
+    expect(gender(byId('aigle-royal'))).toBe('m');
+  });
+
+  it('accorde les anecdotes au genre du nom affiché', () => {
+    const mismatches = SPECIES.flatMap((s) =>
+      [...s.facts, s.record ?? '']
+        .filter((f) => (gender(s) === 'f' ? /^Ils? /.test(f) : /^Elles? /.test(f)))
+        .map((f) => `${s.id} : ${f}`),
+    );
+    expect(mismatches).toEqual([]);
   });
 
   it('produit des indices progressifs sans révéler le nom', () => {

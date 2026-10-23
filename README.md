@@ -70,6 +70,12 @@ npx expo start
 
 Scannez le QR code affiché (appareil photo sur iPhone, Expo Go sur Android) : l’application s’ouvre aussitôt.
 
+### Android, sans ordinateur
+
+Chaque modification publiée sur la branche est compilée automatiquement par GitHub. Depuis le téléphone, téléchargez [Faunapedia.apk](https://github.com/Aesmyrel/Faunapedia/releases/download/android/Faunapedia.apk), ouvrez-le et autorisez l’installation. Quand une nouvelle version est disponible, un bandeau sur l’écran d’accueil propose de l’installer par-dessus l’ancienne, progression conservée.
+
+### Build autonome avec EAS
+
 Pour installer une vraie application autonome (APK Android ou build iOS interne) sans passer par un store, utilisez EAS :
 
 ```bash

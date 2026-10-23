@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CollectionCard } from '@/components/home/collection-card';
 import { GroupTile } from '@/components/home/group-tile';
+import { UpdateBanner } from '@/components/home/update-banner';
 import { ShareAppCard } from '@/components/share/share-app-card';
 import { SpeciesCard } from '@/components/species/species-card';
 import { Carousel } from '@/components/ui/carousel';
@@ -90,6 +91,8 @@ export default function DiscoverScreen() {
           </ProgressRing>
         </Tap>
       </View>
+
+      <UpdateBanner />
 
       <Animated.View entering={FadeInDown.duration(500)} style={styles.block}>
         <Txt variant="label" tone="accent" style={styles.eyebrow}>

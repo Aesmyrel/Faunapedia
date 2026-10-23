@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { StyleSheet, View } from 'react-native';
@@ -10,6 +11,7 @@ import { Tap } from '@/components/ui/tap';
 import { Txt } from '@/components/ui/text';
 import { Radius } from '@/constants/theme';
 import { SPECIES } from '@/data';
+import { BUILD_ID } from '@/hooks/use-app-update';
 import { useTheme } from '@/hooks/use-theme';
 
 const SOURCES = [
@@ -95,6 +97,10 @@ export default function AboutScreen() {
           interroger iNaturalist lorsque vous ouvrez « Autour de moi », et n’est jamais conservée.
         </Txt>
       </Section>
+      <Txt variant="caption" tone="muted" align="center" style={styles.version}>
+        Version {Constants.expoConfig?.version ?? '1.0.0'}
+        {BUILD_ID > 0 ? ` · compilation ${BUILD_ID}` : ''}
+      </Txt>
     </StackScreen>
   );
 }
@@ -102,6 +108,7 @@ export default function AboutScreen() {
 const styles = StyleSheet.create({
   share: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 8, marginTop: 8, paddingVertical: 10, paddingHorizontal: 16, borderRadius: Radius.pill },
   list: { gap: 10 },
+  version: { marginTop: 8, marginBottom: 16 },
   source: { flexDirection: 'row', gap: 14, padding: 14, borderRadius: Radius.lg, borderWidth: StyleSheet.hairlineWidth },
   flex: { flex: 1, gap: 2 },
 });

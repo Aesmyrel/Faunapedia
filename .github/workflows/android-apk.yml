@@ -38,6 +38,10 @@ jobs:
       - name: Dépendances
         run: npm ci
 
+      # Numéro de compilation inscrit dans l’application : elle le compare à version.json pour proposer les mises à jour.
+      - name: Numéro de compilation
+        run: echo "EXPO_PUBLIC_BUILD_ID=${{ github.run_number }}" > .env
+
       - name: Projet natif (génération continue)
         run: npx expo prebuild --platform android --no-install
 
@@ -46,8 +50,12 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a -Dorg.gradle.jvmargs="-Xmx6g -XX:MaxMetaspaceSize=1g"
 
-      - name: APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk Faunapedia.apk
+      - name: APK et fichier de version
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Faunapedia.apk
+          jq -n --argjson build ${{ github.run_number }} --arg notes "$(git log -1 --pretty=%s)" --arg date "$(date -u +%FT%TZ)" \
+            '{build: $build, notes: $notes, date: $date}' > version.json
+          cat version.json
 
       - uses: actions/upload-artifact@v6
         with:
@@ -61,10 +69,12 @@ jobs:
         run: |
           NOTES="Version du $(date -u +'%d/%m/%Y à %H:%M') UTC (${GITHUB_SHA::7}).
 
-          Installation sur Android : téléchargez Faunapedia.apk depuis le téléphone, ouvrez-le, puis autorisez l’installation lorsque le téléphone le demande. Les nouvelles versions s’installent par-dessus l’ancienne en conservant la progression."
+          Installation sur Android : téléchargez Faunapedia.apk depuis le téléphone, ouvrez-le, puis autorisez l’installation lorsque le téléphone le demande. Les nouvelles versions s’installent par-dessus l’ancienne en conservant la progression ; l’application signale elle-même leur disponibilité."
+          # L’APK d’abord : l’application ne doit jamais voir une version annoncée mais pas encore téléchargeable.
           if gh release view android > /dev/null 2>&1; then
             gh release upload android Faunapedia.apk --clobber
             gh release edit android --notes "$NOTES"
           else
             gh release create android Faunapedia.apk --title "Faunapedia pour Android" --notes "$NOTES" --prerelease --target "$GITHUB_SHA"
           fi
+          gh release upload android version.json --clobber

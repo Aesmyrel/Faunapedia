@@ -6,6 +6,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { CollectionCard } from '@/components/home/collection-card';
 import { GroupTile } from '@/components/home/group-tile';
+import { SeasonCard } from '@/components/home/season-card';
 import { UpdateBanner } from '@/components/home/update-banner';
 import { SpiderQuestion } from '@/components/spider-question';
 import { ShareAppCard } from '@/components/share/share-app-card';
@@ -18,8 +19,9 @@ import { Section } from '@/components/ui/section';
 import { Tap } from '@/components/ui/tap';
 import { Txt } from '@/components/ui/text';
 import { alpha, Gutter, MaxContentWidth, Radius } from '@/constants/theme';
-import { hashString, SPECIES, speciesOfTheDay } from '@/data';
+import { getSpecies, hashString, SPECIES, speciesOfTheDay } from '@/data';
 import { COLLECTIONS, GROUP_ORDER } from '@/data/reference';
+import { MONTH_NAMES, SEASONS } from '@/data/seasons';
 import { useHaptics } from '@/hooks/use-haptics';
 import { useShake } from '@/hooks/use-shake';
 import { useTheme } from '@/hooks/use-theme';
@@ -63,6 +65,12 @@ export default function DiscoverScreen() {
     const pool = SPECIES.filter((s) => s.photos.length && !seen[s.id] && s.id !== featured.id && !(hideSpiders && isArachnid(s)));
     return shuffle(rng, pool).slice(0, 10);
   }, [today, seen, featured.id, hideSpiders]);
+
+  const month = now.getMonth();
+  const seasonEvents = SEASONS[month].filter((e) => {
+    const species = getSpecies(e.speciesId);
+    return !(hideSpiders && species && isArachnid(species));
+  });
 
   const surprise = () => {
     h.heavy();
@@ -162,6 +170,18 @@ export default function DiscoverScreen() {
         </Tap>
       </Animated.View>
 
+      <Section
+        title="Ce mois-ci dans la nature"
+        eyebrow={capitalize(MONTH_NAMES[month])}
+        bleed
+        action={{ label: 'Tout voir', onPress: () => router.push('/saison') }}>
+        <Carousel snap={240}>
+          {seasonEvents.map((e) => (
+            <SeasonCard key={e.title} event={e} month={month} width={240} />
+          ))}
+        </Carousel>
+      </Section>
+
       <Section title="Le règne animal" eyebrow={`${seenCount}/${SPECIES.length} espèces découvertes`} bleed>
         <Carousel>
           {GROUP_ORDER.map((g) => (
@@ -193,6 +213,25 @@ export default function DiscoverScreen() {
             title="Arbre du vivant"
             text="Plus d’un million d’espèces animales, de l’embranchement à l’espèce."
             onPress={() => router.push('/taxon/1')}
+          />
+        </View>
+      </Section>
+
+      <Section title="Comprendre le vivant" eyebrow="Évolution et parenté">
+        <View style={styles.fieldGrid}>
+          <FieldCard
+            icon="chart-donut-variant"
+            color="#C084FC"
+            title="L’arbre des espèces"
+            text="Les 275 espèces de Faunapedia sur un grand arbre interactif : zoomez, touchez, suivez les lignées."
+            onPress={() => router.push('/arbre')}
+          />
+          <FieldCard
+            icon="timeline-clock-outline"
+            color="#F59E0B"
+            title="La frise de l’évolution"
+            text="540 millions d’années de vie animale, de l’explosion cambrienne à notre espèce."
+            onPress={() => router.push('/frise')}
           />
         </View>
       </Section>

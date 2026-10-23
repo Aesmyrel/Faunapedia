@@ -52,6 +52,9 @@ Plus de quinze types de questions (identification par photo, photo à retrouver,
 - **Comparateur** : parenté (dernier ancêtre commun), échelle commune, mensurations face à face.
 - **Autour de moi** : les espèces réellement observées près de vous… ou en voyage virtuel (Camargue, Serengeti, Galápagos, Bornéo…).
 - **17 collections thématiques**, dont « Mythes et légendes » : records, abysses, faune de France (outre-mer compris), venimeux et vénéneux, camouflage, fossiles vivants, migrateurs, espèces disparues…
+- **Ce mois-ci dans la nature** : le calendrier naturel de la France, mois par mois (brame du cerf, migration des crapauds, vers luisants…), avec des gestes simples pour aider la faune.
+- **L’arbre des espèces** : les 275 espèces sur un grand arbre circulaire tiré de leur classification, à explorer du bout des doigts ; les espèces découvertes s’illuminent.
+- **La frise de l’évolution** : 540 millions d’années de vie animale, période par période, des extinctions massives à notre espèce, avec les lignées des espèces de l’application.
 - **Surprends-moi** : secouez le téléphone pour découvrir une espèce au hasard.
 - **Mode arachnophobie** : proposé dès le premier lancement et réglable dans le Carnet, il remplace photos et silhouettes d’araignées (et autres arachnides) par des images toutes douces, et les écarte des quiz.
 - **Partager l’application** : un QR code à faire scanner et un lien à envoyer, depuis l’accueil, le carnet ou « À propos ».
